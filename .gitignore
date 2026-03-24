@@ -1,1 +1,7 @@
-.idea/
+/.idea/
+/.vscode/
+/.phpunit.cache/
+/.env.local
+/.env.*.local
+/vendor/
+/var/

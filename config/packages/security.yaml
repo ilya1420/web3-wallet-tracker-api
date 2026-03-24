@@ -1,0 +1,27 @@
+security:
+  password_hashers:
+    App\Domain\Entity\User:
+      algorithm: argon2id
+
+  providers:
+    app_user_provider:
+      entity:
+        class: App\Domain\Entity\User
+        property: email
+
+  firewalls:
+    dev:
+      pattern: ^/(_(profiler|wdt)|css|images|js)/
+      security: false
+
+    main:
+      stateless: true
+      provider: app_user_provider
+      custom_authenticators:
+        - App\Infrastructure\Security\BearerTokenAuthenticator
+
+  access_control:
+    - { path: ^/auth/request-login-link, roles: PUBLIC_ACCESS }
+    - { path: ^/auth/confirm-token, roles: PUBLIC_ACCESS }
+    - { path: ^/me, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/users, roles: ROLE_ADMIN }
