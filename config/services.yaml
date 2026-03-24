@@ -1,0 +1,35 @@
+parameters:
+  app.url: '%env(APP_URL)%'
+  app.login_token_ttl: '%env(LOGIN_TOKEN_TTL)%'
+  app.access_token_ttl: '%env(ACCESS_TOKEN_TTL)%'
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\:
+    resource: '../src/'
+    exclude:
+      - '../src/DependencyInjection/'
+      - '../src/Kernel.php'
+
+  App\Domain\Repository\UserRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\UserRepository'
+  App\Domain\Repository\LoginTokenRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\LoginTokenRepository'
+  App\Domain\Repository\AccessTokenRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\AccessTokenRepository'
+
+  App\Application\Service\LoginRateLimiterService:
+    arguments:
+      $loginRequestLimiter: '@limiter.login_request'
+
+  App\Application\UseCase\RequestLoginLinkUseCase:
+    arguments:
+      $loginTokenTtl: '%app.login_token_ttl%'
+
+  App\Application\UseCase\ConfirmLoginTokenUseCase:
+    arguments:
+      $accessTokenTtl: '%app.access_token_ttl%'
+
+  App\Infrastructure\Mail\LoginLinkMailer:
+    arguments:
+      $appUrl: '%app.url%'

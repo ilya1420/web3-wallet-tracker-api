@@ -1,0 +1,14 @@
+api_platform:
+  title: Highload API
+  version: 1.0.0
+  mapping:
+    paths:
+      - '%kernel.project_dir%/src/UI/Controller'
+  formats:
+    json:
+      mime_types:
+        - application/json
+  defaults:
+    stateless: true
+    cache_headers:
+      vary: ['Content-Type', 'Authorization', 'Origin']
