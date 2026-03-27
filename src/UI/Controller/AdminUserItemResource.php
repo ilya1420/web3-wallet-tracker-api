@@ -8,8 +8,8 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Patch;
+use App\Application\DTO\ApiDataResponse;
 use App\Application\DTO\AdminUpdateUserInput;
-use App\Application\DTO\UserOutput;
 use App\UI\Processor\AdminDeleteUserProcessor;
 use App\UI\Processor\AdminUpdateUserProcessor;
 use App\UI\Provider\AdminUserItemProvider;
@@ -19,7 +19,7 @@ use App\UI\Provider\AdminUserItemProvider;
         new Get(
             uriTemplate: '/admin/users/{id}',
             security: "is_granted('ROLE_ADMIN')",
-            output: UserOutput::class,
+            output: ApiDataResponse::class,
             name: 'admin_users_get',
             provider: AdminUserItemProvider::class,
         ),
@@ -27,7 +27,7 @@ use App\UI\Provider\AdminUserItemProvider;
             uriTemplate: '/admin/users/{id}',
             security: "is_granted('ROLE_ADMIN')",
             input: AdminUpdateUserInput::class,
-            output: UserOutput::class,
+            output: ApiDataResponse::class,
             read: false,
             name: 'admin_users_update',
             processor: AdminUpdateUserProcessor::class,
@@ -35,8 +35,9 @@ use App\UI\Provider\AdminUserItemProvider;
         new Delete(
             uriTemplate: '/admin/users/{id}',
             security: "is_granted('ROLE_ADMIN')",
-            output: false,
+            output: ApiDataResponse::class,
             read: false,
+            status: 200,
             name: 'admin_users_delete',
             processor: AdminDeleteUserProcessor::class,
         ),

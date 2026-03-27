@@ -7,21 +7,21 @@ namespace App\UI\Controller;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Post;
 use App\Application\DTO\ApiDataResponse;
-use App\Application\DTO\ConfirmTokenInput;
-use App\UI\Processor\ConfirmTokenProcessor;
+use App\Application\DTO\RegisterUserInput;
+use App\UI\Processor\RegisterUserProcessor;
 
 #[ApiResource(
     operations: [
         new Post(
-            uriTemplate: '/auth/confirm-token',
-            input: ConfirmTokenInput::class,
+            uriTemplate: '/auth/register',
+            input: RegisterUserInput::class,
             output: ApiDataResponse::class,
             read: false,
-            name: 'confirm_token',
-            processor: ConfirmTokenProcessor::class,
+            name: 'register_user',
+            processor: RegisterUserProcessor::class,
         ),
     ],
 )]
-final class ConfirmTokenResource
+final class RegisterUserResource
 {
 }

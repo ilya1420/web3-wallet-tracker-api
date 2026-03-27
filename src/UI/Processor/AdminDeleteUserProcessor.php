@@ -6,6 +6,7 @@ namespace App\UI\Processor;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use App\Application\DTO\ApiDataResponse;
 use App\Domain\Repository\UserRepositoryInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -15,7 +16,7 @@ final readonly class AdminDeleteUserProcessor implements ProcessorInterface
     {
     }
 
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): null
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         $id = (string) ($uriVariables['id'] ?? '');
         $user = $this->userRepository->findById($id);
@@ -26,6 +27,6 @@ final readonly class AdminDeleteUserProcessor implements ProcessorInterface
 
         $this->userRepository->remove($user);
 
-        return null;
+        return new ApiDataResponse(['deleted' => true]);
     }
 }

@@ -12,6 +12,7 @@ final readonly class LoginLinkMailer
     public function __construct(
         private MailerInterface $mailer,
         private string $appUrl,
+        private string $mailFrom,
     ) {
     }
 
@@ -24,6 +25,7 @@ final readonly class LoginLinkMailer
         ], JSON_THROW_ON_ERROR);
 
         $email = (new TemplatedEmail())
+            ->from($this->mailFrom)
             ->to($recipientEmail)
             ->subject('Your secure login link')
             ->htmlTemplate('emails/login_link.html.twig')

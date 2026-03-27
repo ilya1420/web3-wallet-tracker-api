@@ -6,7 +6,7 @@ namespace App\UI\Provider;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
-use App\Application\DTO\UserOutput;
+use App\Application\DTO\ApiDataResponse;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Repository\UserRepositoryInterface;
 
@@ -18,11 +18,11 @@ final readonly class AdminUsersProvider implements ProviderInterface
     ) {
     }
 
-    /** @return list<UserOutput> */
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): array
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         $users = $this->userRepository->findAllUsers();
+        $items = array_map($this->mapper->toUserOutput(...), $users);
 
-        return array_map($this->mapper->toUserOutput(...), $users);
+        return new ApiDataResponse($items);
     }
 }

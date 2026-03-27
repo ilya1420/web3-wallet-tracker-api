@@ -6,7 +6,7 @@ namespace App\UI\Provider;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
-use App\Application\DTO\MeOutput;
+use App\Application\DTO\ApiDataResponse;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -20,7 +20,7 @@ final readonly class MeProvider implements ProviderInterface
     ) {
     }
 
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): MeOutput
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         $user = $this->security->getUser();
 
@@ -28,6 +28,6 @@ final readonly class MeProvider implements ProviderInterface
             throw new UnauthorizedHttpException('Bearer', 'Authentication required.');
         }
 
-        return $this->mapper->toMeOutput($user);
+        return new ApiDataResponse($this->mapper->toMeOutput($user));
     }
 }

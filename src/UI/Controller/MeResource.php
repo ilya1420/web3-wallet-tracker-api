@@ -6,7 +6,7 @@ namespace App\UI\Controller;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
-use App\Application\DTO\MeOutput;
+use App\Application\DTO\ApiDataResponse;
 use App\UI\Provider\MeProvider;
 
 #[ApiResource(
@@ -14,7 +14,7 @@ use App\UI\Provider\MeProvider;
         new Get(
             uriTemplate: '/me',
             security: "is_granted('IS_AUTHENTICATED_FULLY')",
-            output: MeOutput::class,
+            output: ApiDataResponse::class,
             name: 'me',
             provider: MeProvider::class,
         ),
