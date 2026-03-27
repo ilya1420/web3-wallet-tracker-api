@@ -16,9 +16,9 @@ use App\UI\Processor\RequestLoginLinkProcessor;
             uriTemplate: '/auth/request-login-link',
             input: RequestLoginLinkInput::class,
             output: OperationStatusOutput::class,
-            processor: RequestLoginLinkProcessor::class,
             read: false,
             name: 'request_login_link',
+            processor: RequestLoginLinkProcessor::class,
         ),
     ],
 )]

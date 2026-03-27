@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Application\DTO\OperationStatusOutput;
 use App\Application\DTO\RequestLoginLinkInput;
+use App\Application\Exception\RateLimitExceededException;
 use App\Application\UseCase\RequestLoginLinkUseCase;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
@@ -23,7 +24,7 @@ final readonly class RequestLoginLinkProcessor implements ProcessorInterface
 
         try {
             $this->useCase->execute($data->email);
-        } catch (\RuntimeException $e) {
+        } catch (RateLimitExceededException $e) {
             throw new TooManyRequestsHttpException(null, $e->getMessage(), $e);
         }
 

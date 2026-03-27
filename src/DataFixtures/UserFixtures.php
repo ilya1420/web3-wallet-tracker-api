@@ -27,7 +27,7 @@ final class UserFixtures extends Fixture
         ];
 
         foreach ($users as $item) {
-            $user = new User(new Email($item['email']), 'placeholder_hash', $item['roles']);
+            $user = new User(new Email($item['email']), bin2hex(random_bytes(32)), $item['roles']);
             $user->changePassword($this->passwordHasher->hashPassword($user, $item['password']));
             $manager->persist($user);
         }

@@ -10,6 +10,7 @@ use App\Application\DTO\AdminUpdateUserInput;
 use App\Application\DTO\UserOutput;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Repository\UserRepositoryInterface;
+use App\Domain\ValueObject\Email;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -35,12 +36,13 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
         }
 
         if ($data->email !== null) {
-            $existing = $this->userRepository->findByEmail($data->email);
-            if ($existing !== null && $existing->id()->toRfc4122() !== $user->id()->toRfc4122()) {
+            $newEmail = new Email($data->email);
+            $existing = $this->userRepository->findByEmail($newEmail->value());
+            if ($existing !== null && !$existing->id()->equals($user->id())) {
                 throw new ConflictHttpException('User with this email already exists.');
             }
 
-            $user->setEmail($data->email);
+            $user->changeEmail($newEmail);
         }
 
         if ($data->password !== null) {
@@ -48,11 +50,11 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
         }
 
         if ($data->roles !== null) {
-            $user->setRoles($data->roles);
+            $user->changeRoles($data->roles);
         }
 
         if ($data->isVerified !== null) {
-            $user->setIsVerified($data->isVerified);
+            $user->setVerified($data->isVerified);
         }
 
         $this->userRepository->save($user);

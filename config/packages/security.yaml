@@ -21,12 +21,7 @@ security:
         - App\Infrastructure\Security\BearerTokenAuthenticator
 
   access_control:
-    - { path: ^/auth/request-login-link, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/request-login-link, roles: PUBLIC_ACCESS }
-    - { path: ^/auth/confirm-token, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/confirm-token, roles: PUBLIC_ACCESS }
-    - { path: ^/me, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/me, roles: IS_AUTHENTICATED_FULLY }
-    - { path: ^/users, roles: ROLE_ADMIN }
-    - { path: ^/api/users, roles: ROLE_ADMIN }
     - { path: ^/api/admin/users, roles: ROLE_ADMIN }
