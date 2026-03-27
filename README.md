@@ -38,21 +38,26 @@ Production-grade Symfony API skeleton with DDD, API Platform, MySQL, Redis, Rabb
 
 ## Exposed Endpoints
 
-- `POST /auth/request-login-link`
-- `POST /auth/confirm-token`
-- `GET /users` (admin only)
-- `GET /me` (authenticated)
+- `POST /api/auth/request-login-link`
+- `POST /api/auth/confirm-token`
+- `GET /api/me` (authenticated)
+- `GET /api/users` (admin only)
+- `GET /api/admin/users` (admin list)
+- `POST /api/admin/users` (admin create)
+- `GET /api/admin/users/{id}` (admin details)
+- `PATCH /api/admin/users/{id}` (admin update)
+- `DELETE /api/admin/users/{id}` (admin delete)
 
 ## Auth Flow
 
-1. Client sends email to `POST /auth/request-login-link`.
+1. Client sends email to `POST /api/auth/request-login-link`.
 2. System rate-limits by email (Redis-backed limiter).
 3. Short-lived login token is generated, hashed, stored in DB.
 4. Raw token is sent asynchronously through RabbitMQ.
 5. Worker consumes message and sends email via Mailhog SMTP.
-6. Client confirms via `POST /auth/confirm-token`.
+6. Client confirms via `POST /api/auth/confirm-token`.
 7. API returns stateless bearer access token.
-8. `GET /me` and protected endpoints use bearer token authentication.
+8. `GET /api/me` and protected endpoints use bearer token authentication.
 
 ## Run With Docker
 
@@ -89,15 +94,22 @@ docker compose logs -f worker
 ## Service URLs
 
 - API: `http://localhost:8080`
+- API docs: `http://localhost:8080/api`
 - RabbitMQ UI: `http://localhost:15672` (`guest` / `guest`)
 - Mailhog UI: `http://localhost:8025`
+
+## Admin Access
+
+- Fixture admin credentials: `admin@example.com` / `AdminPass123!`
+- Required role: `ROLE_ADMIN`
+- Authentication method: bearer token from `POST /api/auth/confirm-token`
 
 ## Example Requests
 
 Request login link:
 
 ```bash
-curl -X POST http://localhost:8080/auth/request-login-link \
+curl -X POST http://localhost:8080/api/auth/request-login-link \
   -H 'Content-Type: application/json' \
   -d '{"email":"alice@example.com"}'
 ```
@@ -105,7 +117,7 @@ curl -X POST http://localhost:8080/auth/request-login-link \
 Confirm token:
 
 ```bash
-curl -X POST http://localhost:8080/auth/confirm-token \
+curl -X POST http://localhost:8080/api/auth/confirm-token \
   -H 'Content-Type: application/json' \
   -d '{"email":"alice@example.com","token":"<token-from-email>"}'
 ```
@@ -113,15 +125,24 @@ curl -X POST http://localhost:8080/auth/confirm-token \
 Get profile:
 
 ```bash
-curl http://localhost:8080/me \
+curl http://localhost:8080/api/me \
   -H 'Authorization: Bearer <access-token>'
 ```
 
 Get users (admin token required):
 
 ```bash
-curl http://localhost:8080/users \
+curl http://localhost:8080/api/admin/users \
   -H 'Authorization: Bearer <admin-access-token>'
+```
+
+Create user (admin token required):
+
+```bash
+curl -X POST http://localhost:8080/api/admin/users \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <admin-access-token>' \
+  -d '{"email":"new-user@example.com","password":"StrongPass123!","roles":["ROLE_USER"],"isVerified":false}'
 ```
 
 ## Notes
