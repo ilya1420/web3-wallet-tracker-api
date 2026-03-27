@@ -14,7 +14,7 @@ use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
-final readonly class BearerTokenAuthenticator extends AbstractAuthenticator
+class BearerTokenAuthenticator extends AbstractAuthenticator
 {
     public function __construct(private AccessTokenRepositoryInterface $accessTokenRepository)
     {
