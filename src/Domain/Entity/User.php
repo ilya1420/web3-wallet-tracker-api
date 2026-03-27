@@ -55,26 +55,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getId(): Uuid
-    {
-        return $this->id;
-    }
-
     public function email(): string
     {
         return $this->email;
     }
 
-    public function getEmail(): string
+    public function changeEmail(Email $email): void
     {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = (new Email($email))->value();
-
-        return $this;
+        $this->email = $email->value();
     }
 
     public function verify(): void
@@ -92,17 +80,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->createdAt;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
     public function lastLoginAt(): ?\DateTimeImmutable
-    {
-        return $this->lastLoginAt;
-    }
-
-    public function getLastLoginAt(): ?\DateTimeImmutable
     {
         return $this->lastLoginAt;
     }
@@ -112,11 +90,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isVerified;
     }
 
-    public function setIsVerified(bool $isVerified): self
+    public function setVerified(bool $isVerified): void
     {
         $this->isVerified = $isVerified;
-
-        return $this;
     }
 
     public function getUserIdentifier(): string
@@ -134,13 +110,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $passwordHash): self
-    {
-        $this->password = $passwordHash;
-
-        return $this;
-    }
-
     public function eraseCredentials(): void
     {
     }
@@ -150,15 +119,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $passwordHash;
     }
 
-    public function setRoles(array $roles): self
+    public function changeRoles(array $roles): void
     {
         $this->roles = array_values(array_unique(array_merge($roles, ['ROLE_USER'])));
-
-        return $this;
-    }
-
-    public function __toString(): string
-    {
-        return $this->email;
     }
 }

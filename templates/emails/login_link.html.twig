@@ -5,8 +5,11 @@
     <title>Login Link</title>
 </head>
 <body>
-<p>Use this secure login link:</p>
-<p><a href="{{ loginLink }}">{{ loginLink }}</a></p>
-<p>Or confirm using token: <strong>{{ token }}</strong></p>
+<p>Your one-time login token:</p>
+<p><strong>{{ token }}</strong></p>
+<p>Confirm token via API endpoint:</p>
+<p><code>{{ confirmEndpoint }}</code></p>
+<p>JSON payload:</p>
+<pre>{{ requestPayload }}</pre>
 </body>
 </html>

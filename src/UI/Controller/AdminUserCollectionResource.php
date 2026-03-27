@@ -16,19 +16,19 @@ use App\UI\Provider\AdminUsersProvider;
     operations: [
         new GetCollection(
             uriTemplate: '/admin/users',
-            output: UserOutput::class,
-            provider: AdminUsersProvider::class,
             security: "is_granted('ROLE_ADMIN')",
+            output: UserOutput::class,
             name: 'admin_users_list',
+            provider: AdminUsersProvider::class,
         ),
         new Post(
             uriTemplate: '/admin/users',
+            security: "is_granted('ROLE_ADMIN')",
             input: AdminCreateUserInput::class,
             output: UserOutput::class,
-            processor: AdminCreateUserProcessor::class,
-            security: "is_granted('ROLE_ADMIN')",
             read: false,
             name: 'admin_users_create',
+            processor: AdminCreateUserProcessor::class,
         ),
     ],
     paginationEnabled: false,

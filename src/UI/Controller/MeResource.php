@@ -13,10 +13,10 @@ use App\UI\Provider\MeProvider;
     operations: [
         new Get(
             uriTemplate: '/me',
-            output: MeOutput::class,
-            provider: MeProvider::class,
             security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            output: MeOutput::class,
             name: 'me',
+            provider: MeProvider::class,
         ),
     ],
 )]

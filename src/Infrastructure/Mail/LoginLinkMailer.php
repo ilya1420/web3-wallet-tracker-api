@@ -17,14 +17,19 @@ final readonly class LoginLinkMailer
 
     public function send(string $recipientEmail, string $token): void
     {
-        $link = sprintf('%s/auth/confirm-token?email=%s&token=%s', rtrim($this->appUrl, '/'), urlencode($recipientEmail), urlencode($token));
+        $confirmEndpoint = sprintf('%s/api/auth/confirm-token', rtrim($this->appUrl, '/'));
+        $requestPayload = json_encode([
+            'email' => $recipientEmail,
+            'token' => $token,
+        ], JSON_THROW_ON_ERROR);
 
         $email = (new TemplatedEmail())
             ->to($recipientEmail)
             ->subject('Your secure login link')
             ->htmlTemplate('emails/login_link.html.twig')
             ->context([
-                'loginLink' => $link,
+                'confirmEndpoint' => $confirmEndpoint,
+                'requestPayload' => $requestPayload,
                 'token' => $token,
             ]);
 

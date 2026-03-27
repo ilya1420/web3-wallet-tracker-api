@@ -47,11 +47,6 @@ class LoginToken
         return $this->usedAt === null && $this->expiresAt > $at;
     }
 
-    public function getId(): Uuid
-    {
-        return $this->id;
-    }
-
     public function markUsed(): void
     {
         $this->usedAt = new \DateTimeImmutable();
@@ -62,33 +57,8 @@ class LoginToken
         return $this->email;
     }
 
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
     public function tokenHash(): string
     {
         return $this->tokenHash;
-    }
-
-    public function getTokenHash(): string
-    {
-        return $this->tokenHash;
-    }
-
-    public function getExpiresAt(): \DateTimeImmutable
-    {
-        return $this->expiresAt;
-    }
-
-    public function getUsedAt(): ?\DateTimeImmutable
-    {
-        return $this->usedAt;
-    }
-
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
     }
 }

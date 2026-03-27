@@ -18,7 +18,3 @@ doctrine:
         dir: '%kernel.project_dir%/src/Domain/Entity'
         prefix: 'App\Domain\Entity'
         alias: Domain
-
-doctrine_migrations:
-  migrations_paths:
-    'DoctrineMigrations': '%kernel.project_dir%/migrations'

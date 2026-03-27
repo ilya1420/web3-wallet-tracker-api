@@ -16,9 +16,9 @@ use App\UI\Processor\ConfirmTokenProcessor;
             uriTemplate: '/auth/confirm-token',
             input: ConfirmTokenInput::class,
             output: AuthTokenOutput::class,
-            processor: ConfirmTokenProcessor::class,
             read: false,
             name: 'confirm_token',
+            processor: ConfirmTokenProcessor::class,
         ),
     ],
 )]

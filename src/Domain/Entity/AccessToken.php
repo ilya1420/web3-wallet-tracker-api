@@ -44,17 +44,7 @@ class AccessToken
         return $this->expiresAt > $at;
     }
 
-    public function getId(): Uuid
-    {
-        return $this->id;
-    }
-
     public function user(): User
-    {
-        return $this->user;
-    }
-
-    public function getUser(): User
     {
         return $this->user;
     }
@@ -62,20 +52,5 @@ class AccessToken
     public function tokenHash(): string
     {
         return $this->tokenHash;
-    }
-
-    public function getTokenHash(): string
-    {
-        return $this->tokenHash;
-    }
-
-    public function getExpiresAt(): \DateTimeImmutable
-    {
-        return $this->expiresAt;
-    }
-
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
     }
 }

@@ -28,12 +28,14 @@ final readonly class AdminCreateUserProcessor implements ProcessorInterface
     {
         \assert($data instanceof AdminCreateUserInput);
 
-        if ($this->userRepository->findByEmail($data->email) !== null) {
+        $email = new Email($data->email);
+
+        if ($this->userRepository->findByEmail($email->value()) !== null) {
             throw new ConflictHttpException('User with this email already exists.');
         }
 
         $roles = $data->roles ?? ['ROLE_USER'];
-        $user = new User(new Email($data->email), 'placeholder_hash', $roles);
+        $user = new User($email, bin2hex(random_bytes(32)), $roles);
         $user->changePassword($this->passwordHasher->hashPassword($user, $data->password));
 
         if ($data->isVerified) {

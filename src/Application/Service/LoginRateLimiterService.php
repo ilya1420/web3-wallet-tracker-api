@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Service;
 
+use App\Application\Exception\RateLimitExceededException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 final readonly class LoginRateLimiterService
@@ -18,7 +19,7 @@ final readonly class LoginRateLimiterService
         $limit = $limiter->consume(1);
 
         if (!$limit->isAccepted()) {
-            throw new \RuntimeException('Too many login attempts. Please try again later.');
+            throw new RateLimitExceededException('Too many login attempts. Please try again later.');
         }
     }
 }
