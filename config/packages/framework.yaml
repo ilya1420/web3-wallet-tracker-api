@@ -15,3 +15,6 @@ framework:
       limit: '%env(int:LOGIN_RATE_LIMIT)%'
       interval: '1 minute'
       cache_pool: 'cache.app'
+  exceptions:
+    Symfony\Component\HttpKernel\Exception\HttpExceptionInterface:
+      log_level: warning

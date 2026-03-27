@@ -6,8 +6,8 @@ namespace App\UI\Processor;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use App\Application\DTO\ApiDataResponse;
 use App\Application\DTO\AdminCreateUserInput;
-use App\Application\DTO\UserOutput;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Entity\User;
 use App\Domain\Repository\UserRepositoryInterface;
@@ -24,7 +24,7 @@ final readonly class AdminCreateUserProcessor implements ProcessorInterface
     ) {
     }
 
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): UserOutput
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         \assert($data instanceof AdminCreateUserInput);
 
@@ -44,6 +44,6 @@ final readonly class AdminCreateUserProcessor implements ProcessorInterface
 
         $this->userRepository->save($user);
 
-        return $this->mapper->toUserOutput($user);
+        return new ApiDataResponse($this->mapper->toUserOutput($user));
     }
 }

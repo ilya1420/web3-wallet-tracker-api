@@ -1,7 +1,9 @@
 parameters:
   app.url: '%env(APP_URL)%'
+  app.mail_from: '%env(MAILER_FROM)%'
   app.login_token_ttl: '%env(LOGIN_TOKEN_TTL)%'
   app.access_token_ttl: '%env(ACCESS_TOKEN_TTL)%'
+  app.registration_max_per_ip_day: '%env(int:REGISTRATION_MAX_PER_IP_DAY)%'
 
 services:
   _defaults:
@@ -22,7 +24,16 @@ services:
     arguments:
       $loginRequestLimiter: '@limiter.login_request'
 
+  App\Application\Service\MultiAccountGuardService:
+    arguments:
+      $cache: '@cache.app'
+      $maxRegistrationsPerIpPerDay: '%app.registration_max_per_ip_day%'
+
   App\Application\UseCase\RequestLoginLinkUseCase:
+    arguments:
+      $loginTokenTtl: '%app.login_token_ttl%'
+
+  App\Application\UseCase\RegisterUserUseCase:
     arguments:
       $loginTokenTtl: '%app.login_token_ttl%'
 
@@ -33,3 +44,4 @@ services:
   App\Infrastructure\Mail\LoginLinkMailer:
     arguments:
       $appUrl: '%app.url%'
+      $mailFrom: '%app.mail_from%'

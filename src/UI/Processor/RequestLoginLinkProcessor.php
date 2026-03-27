@@ -6,6 +6,7 @@ namespace App\UI\Processor;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use App\Application\DTO\ApiDataResponse;
 use App\Application\DTO\OperationStatusOutput;
 use App\Application\DTO\RequestLoginLinkInput;
 use App\Application\Exception\RateLimitExceededException;
@@ -18,7 +19,7 @@ final readonly class RequestLoginLinkProcessor implements ProcessorInterface
     {
     }
 
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): OperationStatusOutput
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         \assert($data instanceof RequestLoginLinkInput);
 
@@ -28,6 +29,6 @@ final readonly class RequestLoginLinkProcessor implements ProcessorInterface
             throw new TooManyRequestsHttpException(null, $e->getMessage(), $e);
         }
 
-        return new OperationStatusOutput('ok');
+        return new ApiDataResponse(new OperationStatusOutput('ok'));
     }
 }

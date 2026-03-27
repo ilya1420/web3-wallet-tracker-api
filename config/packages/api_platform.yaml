@@ -8,6 +8,13 @@ api_platform:
     json:
       mime_types:
         - application/json
+  patch_formats:
+    json:
+      - application/merge-patch+json
+  error_formats:
+    json:
+      mime_types:
+        - application/json
   defaults:
     stateless: true
     cache_headers:

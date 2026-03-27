@@ -43,6 +43,7 @@ All API Platform routes are prefixed by `/api`.
 
 Public:
 
+- `POST /api/auth/register`
 - `POST /api/auth/request-login-link`
 - `POST /api/auth/confirm-token`
 
@@ -71,6 +72,15 @@ Admin (`ROLE_ADMIN`):
 - `SendLoginLinkEmailMessage` is dispatched to Messenger transport `async`.
 5. API returns status response immediately; email is sent asynchronously by worker.
 
+### 1.1) Registration with anti-multiaccounting
+
+1. Client sends `POST /api/auth/register` with `email`, `password`, `deviceFingerprint`.
+2. API validates password policy and fingerprint format.
+3. `MultiAccountGuardService` checks one account per device fingerprint (Redis key by hashed fingerprint).
+4. `MultiAccountGuardService` checks max registrations per IP per day (`REGISTRATION_MAX_PER_IP_DAY`).
+5. If checks pass, user is created with `ROLE_USER`.
+6. System generates login token and sends registration email asynchronously through RabbitMQ.
+
 ### 2) Asynchronous email delivery
 
 1. RabbitMQ receives `SendLoginLinkEmailMessage`.
@@ -78,6 +88,18 @@ Admin (`ROLE_ADMIN`):
 3. `SendLoginLinkEmailMessageHandler` calls `LoginLinkMailer`.
 4. Email is delivered via SMTP to Mailhog.
 5. Mail body includes one-time token and the target confirm endpoint.
+
+RabbitMQ message body format (cross-language friendly JSON):
+
+```json
+{
+  "type": "send_login_link_email",
+  "payload": {
+    "email": "alice@example.com",
+    "token": "raw-token"
+  }
+}
+```
 
 ### 3) Token confirmation and bearer issuance
 
@@ -157,6 +179,11 @@ docker compose logs -f worker
 - RabbitMQ data persists in `rabbitmq_data` volume.
 - Token security model: store only SHA-256 token hashes in DB.
 - DTOs are used for all API contracts; Doctrine entities are never exposed directly.
+- SMTP sender is configured via `MAILER_FROM`.
+- Success responses are unified JSON: `{"data": ...}`.
+- Error responses are unified JSON: `{"message":"<text>"}` with proper HTTP status code.
+- API errors are logged by Monolog and visible in container logs.
+- Messenger transport serializer uses JSON contract without PHP envelope/stamps/class names.
 
 ## Manual API Examples
 
@@ -166,6 +193,14 @@ Request login link:
 curl -X POST http://localhost:8080/api/auth/request-login-link \
   -H 'Content-Type: application/json' \
   -d '{"email":"alice@example.com"}'
+```
+
+Register:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"new-user@example.com","password":"StrongPass123!","deviceFingerprint":"device-4f95bca6d8f64a93"}'
 ```
 
 Confirm token:
