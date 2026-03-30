@@ -16,8 +16,8 @@ final readonly class AdminUserOutput
         public bool $isVerified,
         public ?string $lastLoginAt,
         public string $createdAt,
-        public ?string $deviceFingerprint,
-        public ?string $registrationIp,
+        public ?string $deviceFingerprintHash,
+        public ?string $registrationIpHash,
         public ?string $registrationIpCounterDate,
     ) {
     }

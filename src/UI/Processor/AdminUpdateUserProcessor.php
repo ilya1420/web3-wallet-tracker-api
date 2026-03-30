@@ -39,7 +39,7 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
             throw new NotFoundHttpException('User not found.');
         }
 
-        $previousState = $this->multiAccountGuard->extractState($user);
+        $context = $this->multiAccountGuard->findContext($user);
 
         if ($data->email !== null) {
             $newEmail = new Email($data->email);
@@ -71,20 +71,32 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
             $user->changeCreatedAt(new \DateTimeImmutable($data->createdAt));
         }
 
-        if ($data->deviceFingerprint !== null || $data->registrationIp !== null || $data->registrationIpCounterDate !== null) {
-            $user->changeRegistrationContext(
-                $data->deviceFingerprint ?? $user->deviceFingerprint(),
-                $data->registrationIp ?? $user->registrationIp(),
-                $data->registrationIpCounterDate ?? $user->registrationIpCounterDate(),
-            );
-        }
-
         $this->entityManager->getConnection()->transactional(function () use ($user): void {
             $this->userRepository->save($user, false);
             $this->entityManager->flush();
         });
-        $this->multiAccountGuard->syncUserRegistrationContext($user, $previousState);
 
-        return new ApiDataResponse($this->mapper->toAdminUserOutput($user));
+        if ($data->deviceFingerprint !== null || $data->registrationIp !== null || $data->registrationIpCounterDate !== null) {
+            $counterDate = $data->registrationIpCounterDate !== null
+                ? new \DateTimeImmutable($data->registrationIpCounterDate)
+                : $context?->registrationIpCounterDate();
+
+            $deviceFingerprintHash = $data->deviceFingerprint !== null
+                ? $this->multiAccountGuard->hashDeviceFingerprint($data->deviceFingerprint)
+                : $context?->deviceFingerprintHash();
+            $registrationIpHash = $data->registrationIp !== null
+                ? $this->multiAccountGuard->hashRegistrationIp($data->registrationIp)
+                : $context?->registrationIpHash();
+
+            $this->multiAccountGuard->upsertRegistrationContextHashes(
+                $user,
+                $deviceFingerprintHash,
+                $registrationIpHash,
+                $counterDate,
+            );
+            $context = $this->multiAccountGuard->findContext($user);
+        }
+
+        return new ApiDataResponse($this->mapper->toAdminUserOutput($user, $context));
     }
 }

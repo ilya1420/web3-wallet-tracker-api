@@ -27,6 +27,7 @@ services:
   App\Application\Service\MultiAccountGuardService:
     arguments:
       $cache: '@cache.app'
+      $registrationContextRepository: '@App\Infrastructure\Persistence\Doctrine\Repository\UserRegistrationContextRepository'
       $maxRegistrationsPerIpPerDay: '%app.registration_max_per_ip_day%'
 
   App\Application\UseCase\RequestLoginLinkUseCase:

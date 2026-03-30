@@ -36,7 +36,6 @@ final class AdminReplaceUserInput
     #[Assert\Length(min: 16, max: 255)]
     public ?string $deviceFingerprint = null;
 
-    #[Assert\Ip]
     public ?string $registrationIp = null;
 
     #[Assert\Date]

@@ -7,6 +7,7 @@ namespace App\UI\Provider;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Application\DTO\ApiDataResponse;
+use App\Application\Service\MultiAccountGuardService;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Repository\UserRepositoryInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -16,6 +17,7 @@ final readonly class AdminUserItemProvider implements ProviderInterface
     public function __construct(
         private UserRepositoryInterface $userRepository,
         private UserOutputMapper $mapper,
+        private MultiAccountGuardService $multiAccountGuard,
     ) {
     }
 
@@ -28,6 +30,6 @@ final readonly class AdminUserItemProvider implements ProviderInterface
             throw new NotFoundHttpException('User not found.');
         }
 
-        return new ApiDataResponse($this->mapper->toAdminUserOutput($user));
+        return new ApiDataResponse($this->mapper->toAdminUserOutput($user, $this->multiAccountGuard->findContext($user)));
     }
 }
