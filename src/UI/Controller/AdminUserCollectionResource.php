@@ -16,14 +16,12 @@ use App\UI\Provider\AdminUsersProvider;
     operations: [
         new GetCollection(
             uriTemplate: '/admin/users',
-            security: "is_granted('ROLE_ADMIN')",
             output: ApiDataResponse::class,
             name: 'admin_users_list',
             provider: AdminUsersProvider::class,
         ),
         new Post(
             uriTemplate: '/admin/users',
-            security: "is_granted('ROLE_ADMIN')",
             input: AdminCreateUserInput::class,
             output: ApiDataResponse::class,
             read: false,

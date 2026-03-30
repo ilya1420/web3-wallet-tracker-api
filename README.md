@@ -44,7 +44,7 @@ All API Platform routes are prefixed by `/api`.
 Public:
 
 - `POST /api/auth/register`
-- `POST /api/auth/request-login-link`
+- `POST /api/auth/login-links`
 - `POST /api/auth/confirm-token`
 
 Authenticated:
@@ -188,10 +188,10 @@ docker compose logs -f worker
 
 ## Manual API Examples
 
-Request login link:
+Create login link:
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/request-login-link \
+curl -X POST http://localhost:8080/api/auth/login-links \
   -H 'Content-Type: application/json' \
   -d '{"email":"alice@example.com"}'
 ```
@@ -233,4 +233,20 @@ curl -X POST http://localhost:8080/api/admin/users \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <admin-access-token>' \
   -d '{"email":"new-user@example.com","password":"StrongPass123!","roles":["ROLE_USER"],"isVerified":false}'
+```
+
+Admin replace user:
+
+```bash
+curl -X PUT http://localhost:8080/api/admin/users/<user-id> \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <admin-access-token>' \
+  -d '{"email":"edited-user@example.com","password":"StrongPass123!","roles":["ROLE_ADMIN"],"isVerified":true,"lastLoginAt":"2026-03-30T13:09:45+00:00","createdAt":"2026-03-30T13:08:51+00:00","deviceFingerprint":"device-4f95bca6d8f64a93","registrationIp":"127.0.0.1","registrationIpCounterDate":"2026-03-30"}'
+```
+
+Admin delete user:
+
+```bash
+curl -X DELETE http://localhost:8080/api/admin/users/<user-id> \
+  -H 'Authorization: Bearer <admin-access-token>'
 ```

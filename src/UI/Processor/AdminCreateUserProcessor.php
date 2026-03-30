@@ -44,6 +44,6 @@ final readonly class AdminCreateUserProcessor implements ProcessorInterface
 
         $this->userRepository->save($user);
 
-        return new ApiDataResponse($this->mapper->toUserOutput($user));
+        return new ApiDataResponse($this->mapper->toAdminUserOutput($user));
     }
 }

@@ -6,30 +6,32 @@ namespace App\Application\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class AdminUpdateUserInput
+final class AdminReplaceUserInput
 {
+    #[Assert\NotBlank]
     #[Assert\Email]
-    public ?string $email = null;
+    public string $email;
 
     #[Assert\Length(min: 8, max: 255)]
     public ?string $password = null;
 
-    /** @var list<string>|null */
+    /** @var list<string> */
     #[Assert\Count(min: 1)]
     #[Assert\All([
         new Assert\Type('string'),
         new Assert\Regex('/^ROLE_[A-Z0-9_]+$/'),
     ])]
-    public ?array $roles = null;
+    public array $roles = ['ROLE_USER'];
 
     #[Assert\Type('bool')]
-    public ?bool $isVerified = null;
+    public bool $isVerified = false;
 
     #[Assert\DateTime(format: \DateTimeInterface::ATOM)]
     public ?string $lastLoginAt = null;
 
+    #[Assert\NotBlank]
     #[Assert\DateTime(format: \DateTimeInterface::ATOM)]
-    public ?string $createdAt = null;
+    public string $createdAt;
 
     #[Assert\Length(min: 16, max: 255)]
     public ?string $deviceFingerprint = null;
