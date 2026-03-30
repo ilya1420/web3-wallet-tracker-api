@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Security;
 
+use App\Application\Service\TokenManager;
 use App\Domain\Repository\AccessTokenRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,8 +17,10 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class BearerTokenAuthenticator extends AbstractAuthenticator
 {
-    public function __construct(private AccessTokenRepositoryInterface $accessTokenRepository)
-    {
+    public function __construct(
+        private AccessTokenRepositoryInterface $accessTokenRepository,
+        private TokenManager $tokenManager,
+    ) {
     }
 
     public function supports(Request $request): ?bool
@@ -32,7 +35,7 @@ class BearerTokenAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('Missing bearer token.');
         }
 
-        $hashedToken = hash('sha256', $rawToken);
+        $hashedToken = $this->tokenManager->hashToken($rawToken);
         $accessToken = $this->accessTokenRepository->findValidByHash($hashedToken);
 
         if ($accessToken === null) {

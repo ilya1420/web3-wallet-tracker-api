@@ -16,10 +16,13 @@ final class LoginTokenRepository extends ServiceEntityRepository implements Logi
         parent::__construct($registry, LoginToken::class);
     }
 
-    public function save(LoginToken $token): void
+    public function save(LoginToken $token, bool $flush = true): void
     {
         $this->getEntityManager()->persist($token);
-        $this->getEntityManager()->flush();
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
     }
 
     public function findValidByEmailAndHash(string $email, string $tokenHash): ?LoginToken
@@ -34,5 +37,24 @@ final class LoginTokenRepository extends ServiceEntityRepository implements Logi
         }
 
         return $candidate;
+    }
+
+    public function consumeValidToken(string $email, string $tokenHash, \DateTimeImmutable $usedAt): bool
+    {
+        $affectedRows = $this->createQueryBuilder('lt')
+            ->update()
+            ->set('lt.usedAt', ':usedAt')
+            ->where('lt.email = :email')
+            ->andWhere('lt.tokenHash = :tokenHash')
+            ->andWhere('lt.usedAt IS NULL')
+            ->andWhere('lt.expiresAt > :now')
+            ->setParameter('usedAt', $usedAt)
+            ->setParameter('now', $usedAt)
+            ->setParameter('email', mb_strtolower(trim($email)))
+            ->setParameter('tokenHash', $tokenHash)
+            ->getQuery()
+            ->execute();
+
+        return $affectedRows === 1;
     }
 }

@@ -7,7 +7,7 @@ Production-grade stateless REST API on Symfony + API Platform with DDD architect
 - PHP 8.3+
 - Symfony 7.3
 - API Platform 3 (REST)
-- MySQL 8
+- MySQL 8.4
 - Redis 7
 - RabbitMQ 3 (management UI)
 - Mailhog
@@ -162,6 +162,7 @@ docker compose logs -f worker
 ## Service URLs
 
 - API root: `http://localhost:8080/api`
+- App URL used in emails: `http://localhost:8080`
 - RabbitMQ UI: `http://localhost:15672` (`guest` / `guest`)
 - Mailhog UI: `http://localhost:8025`
 
