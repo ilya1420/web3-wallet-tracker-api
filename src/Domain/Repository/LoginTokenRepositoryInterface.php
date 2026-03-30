@@ -8,7 +8,9 @@ use App\Domain\Entity\LoginToken;
 
 interface LoginTokenRepositoryInterface
 {
-    public function save(LoginToken $token): void;
+    public function save(LoginToken $token, bool $flush = true): void;
 
     public function findValidByEmailAndHash(string $email, string $tokenHash): ?LoginToken;
+
+    public function consumeValidToken(string $email, string $tokenHash, \DateTimeImmutable $usedAt): bool;
 }

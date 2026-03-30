@@ -16,10 +16,13 @@ final class AccessTokenRepository extends ServiceEntityRepository implements Acc
         parent::__construct($registry, AccessToken::class);
     }
 
-    public function save(AccessToken $token): void
+    public function save(AccessToken $token, bool $flush = true): void
     {
         $this->getEntityManager()->persist($token);
-        $this->getEntityManager()->flush();
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
     }
 
     public function findValidByHash(string $tokenHash): ?AccessToken

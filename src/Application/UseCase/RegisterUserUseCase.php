@@ -16,6 +16,7 @@ use App\Domain\Repository\LoginTokenRepositoryInterface;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\ValueObject\Email;
 use App\Infrastructure\Messaging\Message\SendLoginLinkEmailMessage;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -29,6 +30,7 @@ final readonly class RegisterUserUseCase
         private MessageBusInterface $messageBus,
         private TokenManager $tokenManager,
         private UserOutputMapper $mapper,
+        private EntityManagerInterface $entityManager,
         private string $loginTokenTtl = 'PT15M',
     ) {
     }
@@ -48,17 +50,29 @@ final readonly class RegisterUserUseCase
 
         $this->multiAccountGuard->assertCanRegister($normalizedEmail, $deviceFingerprint, $ip);
 
-        $user = new User($emailVo, bin2hex(random_bytes(32)), ['ROLE_USER']);
-        $user->changePassword($this->passwordHasher->hashPassword($user, $password));
+        /** @var array{user:User,rawToken:string} $registrationResult */
+        $registrationResult = $this->entityManager->getConnection()->transactional(function () use ($emailVo, $normalizedEmail, $password): array {
+            $user = new User($emailVo, bin2hex(random_bytes(32)), ['ROLE_USER']);
+            $user->changePassword($this->passwordHasher->hashPassword($user, $password));
+            $rawToken = $this->persistLoginToken($normalizedEmail);
 
-        $this->userRepository->save($user);
+            $this->userRepository->save($user, false);
+            $this->entityManager->flush();
+
+            return [
+                'user' => $user,
+                'rawToken' => $rawToken,
+            ];
+        });
+
+        $user = $registrationResult['user'];
         $this->multiAccountGuard->markRegistered($normalizedEmail, $deviceFingerprint, $ip);
-        $this->sendLoginEmail($normalizedEmail);
+        $this->messageBus->dispatch(new SendLoginLinkEmailMessage($normalizedEmail, $registrationResult['rawToken']));
 
         return $this->mapper->toUserOutput($user);
     }
 
-    private function sendLoginEmail(string $normalizedEmail): void
+    private function persistLoginToken(string $normalizedEmail): string
     {
         $rawToken = $this->tokenManager->generateRawToken();
         $token = new LoginToken(
@@ -67,7 +81,8 @@ final readonly class RegisterUserUseCase
             (new \DateTimeImmutable())->add(new \DateInterval($this->loginTokenTtl)),
         );
 
-        $this->loginTokenRepository->save($token);
-        $this->messageBus->dispatch(new SendLoginLinkEmailMessage($normalizedEmail, $rawToken));
+        $this->loginTokenRepository->save($token, false);
+
+        return $rawToken;
     }
 }

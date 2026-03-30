@@ -8,7 +8,7 @@ use App\Domain\Entity\AccessToken;
 
 interface AccessTokenRepositoryInterface
 {
-    public function save(AccessToken $token): void;
+    public function save(AccessToken $token, bool $flush = true): void;
 
     public function findValidByHash(string $tokenHash): ?AccessToken;
 }
