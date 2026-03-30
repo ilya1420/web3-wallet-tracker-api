@@ -13,12 +13,21 @@ use App\UI\Processor\RequestLoginLinkProcessor;
 #[ApiResource(
     operations: [
         new Post(
+            uriTemplate: '/auth/login-links',
+            input: RequestLoginLinkInput::class,
+            output: ApiDataResponse::class,
+            read: false,
+            name: 'create_login_link',
+            processor: RequestLoginLinkProcessor::class,
+        ),
+        new Post(
             uriTemplate: '/auth/request-login-link',
             input: RequestLoginLinkInput::class,
             output: ApiDataResponse::class,
             read: false,
-            name: 'request_login_link',
+            name: 'request_login_link_legacy',
             processor: RequestLoginLinkProcessor::class,
+            deprecationReason: 'Use POST /api/auth/login-links instead.',
         ),
     ],
 )]

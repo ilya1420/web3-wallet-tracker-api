@@ -51,9 +51,14 @@ final readonly class RegisterUserUseCase
         $this->multiAccountGuard->assertCanRegister($normalizedEmail, $deviceFingerprint, $ip);
 
         /** @var array{user:User,rawToken:string} $registrationResult */
-        $registrationResult = $this->entityManager->getConnection()->transactional(function () use ($emailVo, $normalizedEmail, $password): array {
+        $registrationResult = $this->entityManager->getConnection()->transactional(function () use ($emailVo, $normalizedEmail, $password, $deviceFingerprint, $ip): array {
             $user = new User($emailVo, bin2hex(random_bytes(32)), ['ROLE_USER']);
             $user->changePassword($this->passwordHasher->hashPassword($user, $password));
+            $user->changeRegistrationContext(
+                $deviceFingerprint,
+                $ip,
+                (new \DateTimeImmutable())->format('Y-m-d'),
+            );
             $rawToken = $this->persistLoginToken($normalizedEmail);
 
             $this->userRepository->save($user, false);
@@ -66,7 +71,7 @@ final readonly class RegisterUserUseCase
         });
 
         $user = $registrationResult['user'];
-        $this->multiAccountGuard->markRegistered($normalizedEmail, $deviceFingerprint, $ip);
+        $this->multiAccountGuard->syncUserRegistrationContext($user);
         $this->messageBus->dispatch(new SendLoginLinkEmailMessage($normalizedEmail, $registrationResult['rawToken']));
 
         return $this->mapper->toUserOutput($user);

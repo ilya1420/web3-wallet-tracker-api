@@ -22,6 +22,7 @@ security:
 
   access_control:
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/login-links, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/request-login-link, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/confirm-token, roles: PUBLIC_ACCESS }
     - { path: ^/api/me, roles: IS_AUTHENTICATED_FULLY }

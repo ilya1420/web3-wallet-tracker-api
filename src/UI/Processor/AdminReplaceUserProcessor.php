@@ -6,7 +6,7 @@ namespace App\UI\Processor;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
-use App\Application\DTO\AdminUpdateUserInput;
+use App\Application\DTO\AdminReplaceUserInput;
 use App\Application\DTO\ApiDataResponse;
 use App\Application\Service\MultiAccountGuardService;
 use App\Application\Service\UserOutputMapper;
@@ -17,7 +17,7 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-final readonly class AdminUpdateUserProcessor implements ProcessorInterface
+final readonly class AdminReplaceUserProcessor implements ProcessorInterface
 {
     public function __construct(
         private UserRepositoryInterface $userRepository,
@@ -30,7 +30,7 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
-        \assert($data instanceof AdminUpdateUserInput);
+        \assert($data instanceof AdminReplaceUserInput);
 
         $id = (string) ($uriVariables['id'] ?? '');
         $user = $this->userRepository->findById($id);
@@ -39,50 +39,34 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
             throw new NotFoundHttpException('User not found.');
         }
 
+        $newEmail = new Email($data->email);
+        $existing = $this->userRepository->findByEmail($newEmail->value());
+        if ($existing !== null && !$existing->id()->equals($user->id())) {
+            throw new ConflictHttpException('User with this email already exists.');
+        }
+
         $previousState = $this->multiAccountGuard->extractState($user);
 
-        if ($data->email !== null) {
-            $newEmail = new Email($data->email);
-            $existing = $this->userRepository->findByEmail($newEmail->value());
-            if ($existing !== null && !$existing->id()->equals($user->id())) {
-                throw new ConflictHttpException('User with this email already exists.');
-            }
-
-            $user->changeEmail($newEmail);
-        }
+        $user->changeEmail($newEmail);
+        $user->changeRoles($data->roles);
+        $user->setVerified($data->isVerified);
+        $user->changeCreatedAt(new \DateTimeImmutable($data->createdAt));
+        $user->changeLastLoginAt($data->lastLoginAt !== null ? new \DateTimeImmutable($data->lastLoginAt) : null);
+        $user->changeRegistrationContext(
+            $data->deviceFingerprint,
+            $data->registrationIp,
+            $data->registrationIpCounterDate,
+        );
 
         if ($data->password !== null) {
             $user->changePassword($this->passwordHasher->hashPassword($user, $data->password));
-        }
-
-        if ($data->roles !== null) {
-            $user->changeRoles($data->roles);
-        }
-
-        if ($data->isVerified !== null) {
-            $user->setVerified($data->isVerified);
-        }
-
-        if ($data->lastLoginAt !== null) {
-            $user->changeLastLoginAt(new \DateTimeImmutable($data->lastLoginAt));
-        }
-
-        if ($data->createdAt !== null) {
-            $user->changeCreatedAt(new \DateTimeImmutable($data->createdAt));
-        }
-
-        if ($data->deviceFingerprint !== null || $data->registrationIp !== null || $data->registrationIpCounterDate !== null) {
-            $user->changeRegistrationContext(
-                $data->deviceFingerprint ?? $user->deviceFingerprint(),
-                $data->registrationIp ?? $user->registrationIp(),
-                $data->registrationIpCounterDate ?? $user->registrationIpCounterDate(),
-            );
         }
 
         $this->entityManager->getConnection()->transactional(function () use ($user): void {
             $this->userRepository->save($user, false);
             $this->entityManager->flush();
         });
+
         $this->multiAccountGuard->syncUserRegistrationContext($user, $previousState);
 
         return new ApiDataResponse($this->mapper->toAdminUserOutput($user));

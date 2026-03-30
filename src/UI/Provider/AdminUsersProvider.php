@@ -21,7 +21,7 @@ final readonly class AdminUsersProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
         $users = $this->userRepository->findAllUsers();
-        $items = array_map($this->mapper->toUserOutput(...), $users);
+        $items = array_map($this->mapper->toAdminUserOutput(...), $users);
 
         return new ApiDataResponse($items);
     }

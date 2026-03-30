@@ -28,6 +28,6 @@ final readonly class AdminUserItemProvider implements ProviderInterface
             throw new NotFoundHttpException('User not found.');
         }
 
-        return new ApiDataResponse($this->mapper->toUserOutput($user));
+        return new ApiDataResponse($this->mapper->toAdminUserOutput($user));
     }
 }
