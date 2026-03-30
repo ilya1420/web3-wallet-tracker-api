@@ -35,15 +35,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $deviceFingerprint;
-
-    #[ORM\Column(type: 'string', length: 45, nullable: true)]
-    private ?string $registrationIp;
-
-    #[ORM\Column(type: 'string', length: 10, nullable: true)]
-    private ?string $registrationIpCounterDate;
-
     /** @var list<string> */
     #[ORM\Column(type: 'json')]
     private array $roles;
@@ -56,9 +47,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = false;
         $this->lastLoginAt = null;
         $this->createdAt = new \DateTimeImmutable();
-        $this->deviceFingerprint = null;
-        $this->registrationIp = null;
-        $this->registrationIpCounterDate = null;
         $this->roles = array_values(array_unique(array_merge($roles, ['ROLE_USER'])));
     }
 
@@ -147,32 +135,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->roles = array_values(array_unique(array_merge($roles, ['ROLE_USER'])));
     }
 
-    public function deviceFingerprint(): ?string
-    {
-        return $this->deviceFingerprint;
-    }
-
-    public function registrationIp(): ?string
-    {
-        return $this->registrationIp;
-    }
-
-    public function registrationIpCounterDate(): ?string
-    {
-        return $this->registrationIpCounterDate;
-    }
-
-    public function changeRegistrationContext(?string $deviceFingerprint, ?string $registrationIp, ?string $registrationIpCounterDate): void
-    {
-        $this->deviceFingerprint = self::normalizeNullable($deviceFingerprint);
-        $this->registrationIp = self::normalizeNullable($registrationIp);
-        $this->registrationIpCounterDate = self::normalizeNullable($registrationIpCounterDate);
-    }
-
-    private static function normalizeNullable(?string $value): ?string
-    {
-        $normalized = $value !== null ? trim($value) : null;
-
-        return $normalized === '' ? null : $normalized;
-    }
 }

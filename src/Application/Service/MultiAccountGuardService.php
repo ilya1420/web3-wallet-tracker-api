@@ -6,20 +6,23 @@ namespace App\Application\Service;
 
 use App\Application\Exception\MultiAccountingDetectedException;
 use App\Domain\Entity\User;
+use App\Infrastructure\Persistence\Doctrine\Entity\UserRegistrationContext;
+use App\Infrastructure\Persistence\Doctrine\Repository\UserRegistrationContextRepository;
 use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class MultiAccountGuardService
 {
     public function __construct(
         private CacheItemPoolInterface $cache,
+        private UserRegistrationContextRepository $registrationContextRepository,
         private int $maxRegistrationsPerIpPerDay,
     ) {
     }
 
     public function assertCanRegister(string $normalizedEmail, string $deviceFingerprint, ?string $ip): void
     {
-        $fingerprintKey = $this->fingerprintKey($deviceFingerprint);
-        $fingerprintItem = $this->cache->getItem($fingerprintKey);
+        $fingerprintHash = $this->hashValue($deviceFingerprint);
+        $fingerprintItem = $this->cache->getItem($this->fingerprintKey($fingerprintHash));
 
         if ($fingerprintItem->isHit()) {
             $existingEmail = (string) $fingerprintItem->get();
@@ -28,9 +31,10 @@ final readonly class MultiAccountGuardService
             }
         }
 
-        if ($ip !== null && $ip !== '') {
-            $ipKey = $this->ipCounterKey($ip, (new \DateTimeImmutable())->format('Y-m-d'));
-            $ipCounterItem = $this->cache->getItem($ipKey);
+        $ipHash = $this->hashNullable($ip);
+        if ($ipHash !== null) {
+            $counterDate = new \DateTimeImmutable('today');
+            $ipCounterItem = $this->cache->getItem($this->ipCounterKey($ipHash, $counterDate));
             $current = $ipCounterItem->isHit() ? (int) $ipCounterItem->get() : 0;
 
             if ($current >= $this->maxRegistrationsPerIpPerDay) {
@@ -39,126 +43,160 @@ final readonly class MultiAccountGuardService
         }
     }
 
-    /**
-     * @param array{email:string,deviceFingerprint:?string,registrationIp:?string,registrationIpCounterDate:?string}|null $previousState
-     */
-    public function syncUserRegistrationContext(User $user, ?array $previousState = null): void
+    public function upsertRegistrationContext(User $user, ?string $deviceFingerprint, ?string $registrationIp, ?\DateTimeImmutable $counterDate): void
     {
-        $currentState = $this->extractState($user);
+        $this->upsertRegistrationContextHashes(
+            $user,
+            $this->hashNullable($deviceFingerprint),
+            $this->hashNullable($registrationIp),
+            $counterDate,
+        );
+    }
 
-        if ($previousState !== null) {
-            $shouldRefreshFingerprint = $previousState['deviceFingerprint'] !== $currentState['deviceFingerprint']
-                || $previousState['email'] !== $currentState['email'];
+    public function upsertRegistrationContextHashes(
+        User $user,
+        ?string $deviceFingerprintHash,
+        ?string $registrationIpHash,
+        ?\DateTimeImmutable $counterDate,
+    ): void
+    {
+        $context = $this->registrationContextRepository->findOneByUser($user) ?? new UserRegistrationContext($user);
+        $previousFingerprintHash = $context->deviceFingerprintHash();
+        $previousIpHash = $context->registrationIpHash();
+        $previousCounterDate = $context->registrationIpCounterDate();
 
-            if ($shouldRefreshFingerprint && $previousState['deviceFingerprint'] !== null) {
-                $this->cache->deleteItem($this->fingerprintKey($previousState['deviceFingerprint']));
-            }
+        $context->update($deviceFingerprintHash, $registrationIpHash, $counterDate);
+        $this->registrationContextRepository->save($context);
 
-            $shouldRebalanceIpCounter = $previousState['registrationIp'] !== $currentState['registrationIp']
-                || $previousState['registrationIpCounterDate'] !== $currentState['registrationIpCounterDate'];
-
-            if ($shouldRebalanceIpCounter) {
-                $this->decrementIpCounter($previousState['registrationIp'], $previousState['registrationIpCounterDate']);
-            }
-        }
-
-        if ($currentState['deviceFingerprint'] !== null) {
-            $fingerprintItem = $this->cache->getItem($this->fingerprintKey($currentState['deviceFingerprint']));
-            $fingerprintItem->set($currentState['email']);
-            $fingerprintItem->expiresAfter(60 * 60 * 24 * 365);
-            $this->cache->save($fingerprintItem);
-        }
-
-        if ($previousState !== null) {
-            $shouldIncrementCurrentIpCounter = $previousState['registrationIp'] !== $currentState['registrationIp']
-                || $previousState['registrationIpCounterDate'] !== $currentState['registrationIpCounterDate'];
-
-            if ($shouldIncrementCurrentIpCounter) {
-                $this->incrementIpCounter($currentState['registrationIp'], $currentState['registrationIpCounterDate']);
-            }
-
-            return;
-        }
-
-        $this->incrementIpCounter($currentState['registrationIp'], $currentState['registrationIpCounterDate']);
+        $this->syncFingerprintCache($previousFingerprintHash, $deviceFingerprintHash, $user->email());
+        $this->syncIpCounterCache($previousIpHash, $previousCounterDate, $registrationIpHash, $counterDate);
     }
 
     public function clearUserRegistrationContext(User $user): void
     {
-        $state = $this->extractState($user);
-
-        if ($state['deviceFingerprint'] !== null) {
-            $this->cache->deleteItem($this->fingerprintKey($state['deviceFingerprint']));
-        }
-
-        $this->decrementIpCounter($state['registrationIp'], $state['registrationIpCounterDate']);
-    }
-
-    /**
-     * @return array{email:string,deviceFingerprint:?string,registrationIp:?string,registrationIpCounterDate:?string}
-     */
-    public function extractState(User $user): array
-    {
-        return [
-            'email' => $user->email(),
-            'deviceFingerprint' => $this->normalizeNullable($user->deviceFingerprint()),
-            'registrationIp' => $this->normalizeNullable($user->registrationIp()),
-            'registrationIpCounterDate' => $this->normalizeNullable($user->registrationIpCounterDate()),
-        ];
-    }
-
-    private function fingerprintKey(string $deviceFingerprint): string
-    {
-        return 'registration_fingerprint_' . hash('sha256', trim($deviceFingerprint));
-    }
-
-    private function ipCounterKey(string $ip, string $date): string
-    {
-        return 'registration_ip_' . hash('sha256', trim($ip)) . '_' . str_replace('-', '', trim($date));
-    }
-
-    private function incrementIpCounter(?string $ip, ?string $date): void
-    {
-        $normalizedIp = $this->normalizeNullable($ip);
-        $normalizedDate = $this->normalizeNullable($date);
-
-        if ($normalizedIp === null || $normalizedDate === null) {
+        $context = $this->registrationContextRepository->findOneByUser($user);
+        if ($context === null) {
             return;
         }
 
-        $ipCounterItem = $this->cache->getItem($this->ipCounterKey($normalizedIp, $normalizedDate));
-        $current = $ipCounterItem->isHit() ? (int) $ipCounterItem->get() : 0;
-        $ipCounterItem->set($current + 1);
-        $ipCounterItem->expiresAfter(60 * 60 * 24);
-        $this->cache->save($ipCounterItem);
+        if ($context->deviceFingerprintHash() !== null) {
+            $this->cache->deleteItem($this->fingerprintKey($context->deviceFingerprintHash()));
+        }
+
+        $this->decrementIpCounter($context->registrationIpHash(), $context->registrationIpCounterDate());
+        $this->registrationContextRepository->remove($context);
     }
 
-    private function decrementIpCounter(?string $ip, ?string $date): void
+    public function findContext(User $user): ?UserRegistrationContext
     {
-        $normalizedIp = $this->normalizeNullable($ip);
-        $normalizedDate = $this->normalizeNullable($date);
+        return $this->registrationContextRepository->findOneByUser($user);
+    }
 
-        if ($normalizedIp === null || $normalizedDate === null) {
+    public function hashDeviceFingerprint(?string $deviceFingerprint): ?string
+    {
+        return $this->hashNullable($deviceFingerprint);
+    }
+
+    public function hashRegistrationIp(?string $registrationIp): ?string
+    {
+        return $this->hashNullable($registrationIp);
+    }
+
+    private function syncFingerprintCache(?string $previousHash, ?string $currentHash, string $email): void
+    {
+        if ($previousHash !== null && $previousHash !== $currentHash) {
+            $this->cache->deleteItem($this->fingerprintKey($previousHash));
+        }
+
+        if ($currentHash === null) {
             return;
         }
 
-        $key = $this->ipCounterKey($normalizedIp, $normalizedDate);
-        $ipCounterItem = $this->cache->getItem($key);
+        $fingerprintItem = $this->cache->getItem($this->fingerprintKey($currentHash));
+        $fingerprintItem->set($email);
+        $fingerprintItem->expiresAfter(60 * 60 * 24 * 365);
+        $this->cache->save($fingerprintItem);
+    }
 
-        if (!$ipCounterItem->isHit()) {
+    private function syncIpCounterCache(
+        ?string $previousIpHash,
+        ?\DateTimeImmutable $previousCounterDate,
+        ?string $currentIpHash,
+        ?\DateTimeImmutable $currentCounterDate,
+    ): void {
+        $shouldDecrementPrevious = $previousIpHash !== $currentIpHash
+            || !$this->sameDate($previousCounterDate, $currentCounterDate);
+
+        if ($shouldDecrementPrevious) {
+            $this->decrementIpCounter($previousIpHash, $previousCounterDate);
+        }
+
+        $shouldIncrementCurrent = $currentIpHash !== null
+            && $currentCounterDate !== null
+            && ($previousIpHash !== $currentIpHash || !$this->sameDate($previousCounterDate, $currentCounterDate));
+
+        if ($shouldIncrementCurrent) {
+            $this->incrementIpCounter($currentIpHash, $currentCounterDate);
+        }
+    }
+
+    private function incrementIpCounter(?string $ipHash, ?\DateTimeImmutable $date): void
+    {
+        if ($ipHash === null || $date === null) {
             return;
         }
 
-        $current = max(0, (int) $ipCounterItem->get() - 1);
+        $item = $this->cache->getItem($this->ipCounterKey($ipHash, $date));
+        $current = $item->isHit() ? (int) $item->get() : 0;
+        $item->set($current + 1);
+        $item->expiresAfter(60 * 60 * 24);
+        $this->cache->save($item);
+    }
+
+    private function decrementIpCounter(?string $ipHash, ?\DateTimeImmutable $date): void
+    {
+        if ($ipHash === null || $date === null) {
+            return;
+        }
+
+        $key = $this->ipCounterKey($ipHash, $date);
+        $item = $this->cache->getItem($key);
+        if (!$item->isHit()) {
+            return;
+        }
+
+        $current = max(0, (int) $item->get() - 1);
         if ($current === 0) {
             $this->cache->deleteItem($key);
 
             return;
         }
 
-        $ipCounterItem->set($current);
-        $ipCounterItem->expiresAfter(60 * 60 * 24);
-        $this->cache->save($ipCounterItem);
+        $item->set($current);
+        $item->expiresAfter(60 * 60 * 24);
+        $this->cache->save($item);
+    }
+
+    private function fingerprintKey(string $fingerprintHash): string
+    {
+        return 'registration_fingerprint_' . $fingerprintHash;
+    }
+
+    private function ipCounterKey(string $ipHash, \DateTimeImmutable $date): string
+    {
+        return 'registration_ip_' . $ipHash . '_' . $date->format('Ymd');
+    }
+
+    private function hashNullable(?string $value): ?string
+    {
+        $normalized = $this->normalizeNullable($value);
+
+        return $normalized === null ? null : $this->hashValue($normalized);
+    }
+
+    private function hashValue(string $value): string
+    {
+        return hash('sha256', trim($value));
     }
 
     private function normalizeNullable(?string $value): ?string
@@ -166,5 +204,10 @@ final readonly class MultiAccountGuardService
         $normalized = $value !== null ? trim($value) : null;
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    private function sameDate(?\DateTimeImmutable $left, ?\DateTimeImmutable $right): bool
+    {
+        return $left?->format('Y-m-d') === $right?->format('Y-m-d');
     }
 }

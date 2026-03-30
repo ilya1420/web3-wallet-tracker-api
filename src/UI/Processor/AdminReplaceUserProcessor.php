@@ -45,18 +45,11 @@ final readonly class AdminReplaceUserProcessor implements ProcessorInterface
             throw new ConflictHttpException('User with this email already exists.');
         }
 
-        $previousState = $this->multiAccountGuard->extractState($user);
-
         $user->changeEmail($newEmail);
         $user->changeRoles($data->roles);
         $user->setVerified($data->isVerified);
         $user->changeCreatedAt(new \DateTimeImmutable($data->createdAt));
         $user->changeLastLoginAt($data->lastLoginAt !== null ? new \DateTimeImmutable($data->lastLoginAt) : null);
-        $user->changeRegistrationContext(
-            $data->deviceFingerprint,
-            $data->registrationIp,
-            $data->registrationIpCounterDate,
-        );
 
         if ($data->password !== null) {
             $user->changePassword($this->passwordHasher->hashPassword($user, $data->password));
@@ -67,8 +60,16 @@ final readonly class AdminReplaceUserProcessor implements ProcessorInterface
             $this->entityManager->flush();
         });
 
-        $this->multiAccountGuard->syncUserRegistrationContext($user, $previousState);
+        $counterDate = $data->registrationIpCounterDate !== null
+            ? new \DateTimeImmutable($data->registrationIpCounterDate)
+            : null;
+        $this->multiAccountGuard->upsertRegistrationContext(
+            $user,
+            $data->deviceFingerprint,
+            $data->registrationIp,
+            $counterDate,
+        );
 
-        return new ApiDataResponse($this->mapper->toAdminUserOutput($user));
+        return new ApiDataResponse($this->mapper->toAdminUserOutput($user, $this->multiAccountGuard->findContext($user)));
     }
 }

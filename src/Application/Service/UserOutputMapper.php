@@ -8,6 +8,7 @@ use App\Application\DTO\AdminUserOutput;
 use App\Application\DTO\MeOutput;
 use App\Application\DTO\UserOutput;
 use App\Domain\Entity\User;
+use App\Infrastructure\Persistence\Doctrine\Entity\UserRegistrationContext;
 
 final class UserOutputMapper
 {
@@ -34,7 +35,7 @@ final class UserOutputMapper
         );
     }
 
-    public function toAdminUserOutput(User $user): AdminUserOutput
+    public function toAdminUserOutput(User $user, ?UserRegistrationContext $context = null): AdminUserOutput
     {
         return new AdminUserOutput(
             id: $user->id()->toRfc4122(),
@@ -43,9 +44,9 @@ final class UserOutputMapper
             isVerified: $user->isVerified(),
             lastLoginAt: $user->lastLoginAt()?->format(DATE_ATOM),
             createdAt: $user->createdAt()->format(DATE_ATOM),
-            deviceFingerprint: $user->deviceFingerprint(),
-            registrationIp: $user->registrationIp(),
-            registrationIpCounterDate: $user->registrationIpCounterDate(),
+            deviceFingerprintHash: $context?->deviceFingerprintHash(),
+            registrationIpHash: $context?->registrationIpHash(),
+            registrationIpCounterDate: $context?->registrationIpCounterDate()?->format('Y-m-d'),
         );
     }
 }

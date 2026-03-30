@@ -57,13 +57,14 @@ Admin (`ROLE_ADMIN`):
 - `POST /api/admin/users`
 - `GET /api/admin/users/{id}`
 - `PATCH /api/admin/users/{id}`
+- `PUT /api/admin/users/{id}`
 - `DELETE /api/admin/users/{id}`
 
 ## How The Application Works
 
 ### 1) Passwordless login request
 
-1. Client sends email to `POST /api/auth/request-login-link`.
+1. Client sends email to `POST /api/auth/login-links`.
 2. `RequestLoginLinkProcessor` invokes `RequestLoginLinkUseCase`.
 3. `LoginRateLimiterService` uses Redis-backed limiter and enforces N requests/minute per email.
 4. If user exists:
@@ -79,7 +80,8 @@ Admin (`ROLE_ADMIN`):
 3. `MultiAccountGuardService` checks one account per device fingerprint (Redis key by hashed fingerprint).
 4. `MultiAccountGuardService` checks max registrations per IP per day (`REGISTRATION_MAX_PER_IP_DAY`).
 5. If checks pass, user is created with `ROLE_USER`.
-6. System generates login token and sends registration email asynchronously through RabbitMQ.
+6. Registration context is persisted in a dedicated `user_registration_context` table with fingerprint/IP hashes.
+7. System generates login token and sends registration email asynchronously through RabbitMQ.
 
 ### 2) Asynchronous email delivery
 
@@ -123,9 +125,9 @@ RabbitMQ message body format (cross-language friendly JSON):
 ### 5) Admin user management via API Platform
 
 1. Admin calls `/api/admin/users*` endpoints.
-2. Access is enforced by both operation security expressions and `access_control`.
-3. `AdminCreateUserProcessor` / `AdminUpdateUserProcessor` / `AdminDeleteUserProcessor` perform write operations through domain repositories.
-4. `AdminUsersProvider` and `AdminUserItemProvider` return `UserOutput` DTO only.
+2. Access is enforced by `access_control`.
+3. `AdminCreateUserProcessor` / `AdminUpdateUserProcessor` / `AdminReplaceUserProcessor` / `AdminDeleteUserProcessor` perform write operations through domain repositories.
+4. Admin outputs include hashed registration context from the dedicated projection table.
 
 ## Run With Docker
 
@@ -179,6 +181,7 @@ docker compose logs -f worker
 - Redis persists in `redis_data` volume.
 - RabbitMQ data persists in `rabbitmq_data` volume.
 - Token security model: store only SHA-256 token hashes in DB.
+- Anti-abuse registration data is stored separately from `users` in `user_registration_context`.
 - DTOs are used for all API contracts; Doctrine entities are never exposed directly.
 - SMTP sender is configured via `MAILER_FROM`.
 - Success responses are unified JSON: `{"data": ...}`.
