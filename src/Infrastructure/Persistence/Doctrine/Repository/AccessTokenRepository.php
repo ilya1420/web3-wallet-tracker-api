@@ -25,14 +25,17 @@ final class AccessTokenRepository extends ServiceEntityRepository implements Acc
         }
     }
 
-    public function findValidByHash(string $tokenHash): ?AccessToken
+    public function findActiveByHash(string $tokenHash, \DateTimeImmutable $at): ?AccessToken
     {
-        $candidate = $this->findOneBy(['tokenHash' => $tokenHash]);
+        /** @var AccessToken|null $accessToken */
+        $accessToken = $this->createQueryBuilder('at')
+            ->andWhere('at.tokenHash = :tokenHash')
+            ->andWhere('at.expiresAt > :at')
+            ->setParameter('tokenHash', $tokenHash)
+            ->setParameter('at', $at)
+            ->getQuery()
+            ->getOneOrNullResult();
 
-        if ($candidate === null || !$candidate->isValidAt(new \DateTimeImmutable())) {
-            return null;
-        }
-
-        return $candidate;
+        return $accessToken;
     }
 }

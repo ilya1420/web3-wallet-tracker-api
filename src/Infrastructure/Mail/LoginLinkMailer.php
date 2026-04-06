@@ -30,9 +30,12 @@ final readonly class LoginLinkMailer
             ->subject('Your secure login link')
             ->htmlTemplate('emails/login_link.html.twig')
             ->context([
+                'recipientEmail' => $recipientEmail,
                 'confirmEndpoint' => $confirmEndpoint,
                 'requestPayload' => $requestPayload,
                 'token' => $token,
+                'apiRoot' => sprintf('%s/api', rtrim($this->appUrl, '/')),
+                'expiresIn' => '15 minutes',
             ]);
 
         $this->mailer->send($email);
