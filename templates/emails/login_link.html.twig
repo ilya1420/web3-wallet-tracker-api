@@ -2,14 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Login Link</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Login Token</title>
 </head>
-<body>
-<p>Your one-time login token:</p>
-<p><strong>{{ token }}</strong></p>
-<p>Confirm token via API endpoint:</p>
-<p><code>{{ confirmEndpoint }}</code></p>
-<p>JSON payload:</p>
-<pre>{{ requestPayload }}</pre>
+<body style="margin:0;padding:0;background:#eef3f8;color:#102033;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef3f8;padding:32px 16px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(16,32,51,0.12);">
+                <tr>
+                    <td style="padding:0;background:linear-gradient(135deg,#0f3d5e 0%,#1f6f8b 55%,#8bd3dd 100%);">
+                        <div style="padding:36px 40px 30px;">
+                            <div style="display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.16);color:#effbff;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
+                                Secure API Access
+                            </div>
+                            <h1 style="margin:18px 0 12px;font-size:32px;line-height:1.15;color:#ffffff;font-weight:800;">
+                                Your one-time login token
+                            </h1>
+                            <p style="margin:0;font-size:16px;line-height:1.7;color:rgba(255,255,255,0.92);">
+                                A passwordless sign-in request was received for <strong>{{ recipientEmail }}</strong>.
+                                Use the token below to confirm authentication and receive your bearer token.
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:36px 40px 18px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0 18px;">
+                            <tr>
+                                <td style="padding:24px;border:1px solid #dbe7f0;border-radius:18px;background:#f8fbfd;">
+                                    <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#52718a;margin-bottom:10px;">
+                                        One-time token
+                                    </div>
+                                    <div style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:18px;line-height:1.7;word-break:break-all;color:#102033;background:#ffffff;border:1px dashed #9db7ca;border-radius:14px;padding:16px 18px;">
+                                        {{ token }}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:22px 24px;border-radius:18px;background:#102f46;color:#eff7fc;">
+                                    <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8bd3dd;margin-bottom:10px;">
+                                        Usage
+                                    </div>
+                                    <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#eff7fc;">
+                                        Send a <strong>POST</strong> request to the confirmation endpoint within <strong>{{ expiresIn }}</strong>.
+                                    </p>
+                                    <p style="margin:0;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:14px;line-height:1.8;color:#d7edf7;word-break:break-all;">
+                                        {{ confirmEndpoint }}
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:24px;border:1px solid #dbe7f0;border-radius:18px;background:#ffffff;">
+                                    <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#52718a;margin-bottom:10px;">
+                                        Request payload
+                                    </div>
+                                    <pre style="margin:0;padding:18px;border-radius:14px;background:#0f1720;color:#e6f3ff;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;">{{ requestPayload }}</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:24px;border:1px solid #dbe7f0;border-radius:18px;background:linear-gradient(180deg,#f8fbfd 0%,#f1f7fb 100%);">
+                                    <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#52718a;margin-bottom:12px;">
+                                        Quick notes
+                                    </div>
+                                    <ul style="margin:0;padding-left:18px;color:#30485e;font-size:14px;line-height:1.8;">
+                                        <li>This token can be used only once.</li>
+                                        <li>After confirmation, the API will return a bearer token for authenticated requests.</li>
+                                        <li>If you did not request access, you can safely ignore this email.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:0 40px 36px;">
+                        <div style="padding:18px 20px;border-radius:16px;background:#f4f8fb;color:#466176;font-size:13px;line-height:1.7;">
+                            API root: <span style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;color:#102033;">{{ apiRoot }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 </body>
 </html>

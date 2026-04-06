@@ -57,7 +57,6 @@ Admin (`ROLE_ADMIN`):
 - `POST /api/admin/users`
 - `GET /api/admin/users/{id}`
 - `PATCH /api/admin/users/{id}`
-- `PUT /api/admin/users/{id}`
 - `DELETE /api/admin/users/{id}`
 
 ## How The Application Works
@@ -126,8 +125,9 @@ RabbitMQ message body format (cross-language friendly JSON):
 
 1. Admin calls `/api/admin/users*` endpoints.
 2. Access is enforced by `access_control`.
-3. `AdminCreateUserProcessor` / `AdminUpdateUserProcessor` / `AdminReplaceUserProcessor` / `AdminDeleteUserProcessor` perform write operations through domain repositories.
-4. Admin outputs include hashed registration context from the dedicated projection table.
+3. `PATCH /api/admin/users/{id}` is partial update only and changes only explicitly provided fields. At the moment this contract is limited to `roles`.
+4. `AdminCreateUserProcessor` / `AdminUpdateUserProcessor` / `AdminDeleteUserProcessor` perform write operations through domain repositories.
+5. Admin outputs include hashed registration context from the dedicated projection table.
 
 ## Run With Docker
 
@@ -238,13 +238,13 @@ curl -X POST http://localhost:8080/api/admin/users \
   -d '{"email":"new-user@example.com","password":"StrongPass123!","roles":["ROLE_USER"],"isVerified":false}'
 ```
 
-Admin replace user:
+Admin update user roles:
 
 ```bash
-curl -X PUT http://localhost:8080/api/admin/users/<user-id> \
-  -H 'Content-Type: application/json' \
+curl -X PATCH http://localhost:8080/api/admin/users/<user-id> \
+  -H 'Content-Type: application/merge-patch+json' \
   -H 'Authorization: Bearer <admin-access-token>' \
-  -d '{"email":"edited-user@example.com","password":"StrongPass123!","roles":["ROLE_ADMIN"],"isVerified":true,"lastLoginAt":"2026-03-30T13:09:45+00:00","createdAt":"2026-03-30T13:08:51+00:00","deviceFingerprint":"device-4f95bca6d8f64a93","registrationIp":"127.0.0.1","registrationIpCounterDate":"2026-03-30"}'
+  -d '{"roles":["ROLE_ADMIN"]}'
 ```
 
 Admin delete user:

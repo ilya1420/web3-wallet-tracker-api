@@ -10,5 +10,5 @@ interface AccessTokenRepositoryInterface
 {
     public function save(AccessToken $token, bool $flush = true): void;
 
-    public function findValidByHash(string $tokenHash): ?AccessToken;
+    public function findActiveByHash(string $tokenHash, \DateTimeImmutable $at): ?AccessToken;
 }

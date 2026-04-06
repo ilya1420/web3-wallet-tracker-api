@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Security;
 
-use App\Application\Service\TokenManager;
-use App\Domain\Repository\AccessTokenRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +16,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class BearerTokenAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
-        private AccessTokenRepositoryInterface $accessTokenRepository,
-        private TokenManager $tokenManager,
+        private AccessTokenUserResolver $accessTokenUserResolver,
     ) {
     }
 
@@ -30,19 +27,24 @@ class BearerTokenAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): SelfValidatingPassport
     {
-        $rawToken = trim((string) str_replace('Bearer ', '', (string) $request->headers->get('Authorization')));
+        $rawToken = $this->extractBearerToken($request);
         if ($rawToken === '') {
             throw new AuthenticationException('Missing bearer token.');
         }
 
-        $hashedToken = $this->tokenManager->hashToken($rawToken);
-        $accessToken = $this->accessTokenRepository->findValidByHash($hashedToken);
-
-        if ($accessToken === null) {
+        $user = $this->accessTokenUserResolver->resolve($rawToken);
+        if ($user === null) {
             throw new AuthenticationException('Invalid or expired access token.');
         }
 
-        return new SelfValidatingPassport(new UserBadge($accessToken->user()->getUserIdentifier(), static fn () => $accessToken->user()));
+        return new SelfValidatingPassport(
+            new UserBadge($user->getUserIdentifier(), static fn () => $user),
+        );
+    }
+
+    private function extractBearerToken(Request $request): string
+    {
+        return trim((string) str_replace('Bearer ', '', (string) $request->headers->get('Authorization')));
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

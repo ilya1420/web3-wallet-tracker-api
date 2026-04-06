@@ -25,20 +25,6 @@ final class LoginTokenRepository extends ServiceEntityRepository implements Logi
         }
     }
 
-    public function findValidByEmailAndHash(string $email, string $tokenHash): ?LoginToken
-    {
-        $candidate = $this->findOneBy([
-            'email' => mb_strtolower(trim($email)),
-            'tokenHash' => $tokenHash,
-        ]);
-
-        if ($candidate === null || !$candidate->isValidAt(new \DateTimeImmutable())) {
-            return null;
-        }
-
-        return $candidate;
-    }
-
     public function consumeValidToken(string $email, string $tokenHash, \DateTimeImmutable $usedAt): bool
     {
         $affectedRows = $this->createQueryBuilder('lt')
