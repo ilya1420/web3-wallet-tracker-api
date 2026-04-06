@@ -97,6 +97,25 @@ services:
     networks:
       - app
 
+  outbox-relay:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: symfony_outbox_relay
+    working_dir: /var/www/html
+    command: sh -lc "php bin/console app:outbox:relay --batch-size=100 --sleep=1 --time-limit=3600 --lock-timeout=60"
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      - php
+      - rabbitmq
+      - mysql
+    networks:
+      - app
+
 volumes:
   mysql_data:
   redis_data:

@@ -38,4 +38,14 @@ final class AccessTokenRepository extends ServiceEntityRepository implements Acc
 
         return $accessToken;
     }
+
+    public function deleteExpired(\DateTimeImmutable $at): int
+    {
+        return $this->createQueryBuilder('at')
+            ->delete()
+            ->andWhere('at.expiresAt <= :at')
+            ->setParameter('at', $at)
+            ->getQuery()
+            ->execute();
+    }
 }

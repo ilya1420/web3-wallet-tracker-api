@@ -11,4 +11,6 @@ interface AccessTokenRepositoryInterface
     public function save(AccessToken $token, bool $flush = true): void;
 
     public function findActiveByHash(string $tokenHash, \DateTimeImmutable $at): ?AccessToken;
+
+    public function deleteExpired(\DateTimeImmutable $at): int;
 }

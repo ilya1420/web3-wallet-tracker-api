@@ -43,4 +43,14 @@ final class LoginTokenRepository extends ServiceEntityRepository implements Logi
 
         return $affectedRows === 1;
     }
+
+    public function deleteObsolete(\DateTimeImmutable $at): int
+    {
+        return $this->createQueryBuilder('lt')
+            ->delete()
+            ->andWhere('lt.expiresAt <= :at OR lt.usedAt IS NOT NULL')
+            ->setParameter('at', $at)
+            ->getQuery()
+            ->execute();
+    }
 }

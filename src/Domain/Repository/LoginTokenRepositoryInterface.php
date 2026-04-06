@@ -11,4 +11,6 @@ interface LoginTokenRepositoryInterface
     public function save(LoginToken $token, bool $flush = true): void;
 
     public function consumeValidToken(string $email, string $tokenHash, \DateTimeImmutable $usedAt): bool;
+
+    public function deleteObsolete(\DateTimeImmutable $at): int;
 }

@@ -31,10 +31,10 @@ final readonly class AdminDeleteUserProcessor implements ProcessorInterface
         }
 
         $this->entityManager->getConnection()->transactional(function () use ($user): void {
+            $this->multiAccountGuard->clearUserRegistrationContext($user, false);
             $this->userRepository->remove($user, false);
             $this->entityManager->flush();
         });
-        $this->multiAccountGuard->clearUserRegistrationContext($user);
 
         return new ApiDataResponse(['deleted' => true]);
     }
