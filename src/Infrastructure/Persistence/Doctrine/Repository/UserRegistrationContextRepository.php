@@ -38,4 +38,9 @@ final class UserRegistrationContextRepository extends ServiceEntityRepository
     {
         return $this->find($user);
     }
+
+    public function existsByDeviceFingerprintHash(string $deviceFingerprintHash): bool
+    {
+        return $this->count(['deviceFingerprintHash' => $deviceFingerprintHash]) > 0;
+    }
 }
