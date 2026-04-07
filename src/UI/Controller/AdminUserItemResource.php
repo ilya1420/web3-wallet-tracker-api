@@ -33,9 +33,10 @@ use App\UI\Provider\AdminUserItemProvider;
         new Delete(
             uriTemplate: '/admin/users/{id}',
             status: 200,
+            input: false,
             output: ApiDataResponse::class,
-            read: false,
             name: 'admin_users_delete',
+            provider: AdminUserItemProvider::class,
             processor: AdminDeleteUserProcessor::class,
         ),
     ],

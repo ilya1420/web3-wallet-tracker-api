@@ -161,6 +161,13 @@ docker compose exec php php bin/console doctrine:fixtures:load --no-interaction
 docker compose logs -f worker
 ```
 
+6. Prepare and run tests:
+
+```bash
+docker compose exec -T mysql mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS app_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON app_test.* TO 'app'@'%'; FLUSH PRIVILEGES;"
+docker compose exec php php vendor/bin/simple-phpunit
+```
+
 ## Service URLs
 
 - API root: `http://localhost:8080/api`
@@ -252,4 +259,25 @@ Admin delete user:
 ```bash
 curl -X DELETE http://localhost:8080/api/admin/users/<user-id> \
   -H 'Authorization: Bearer <admin-access-token>'
+```
+
+## Testing
+
+Tests are split into:
+
+- `tests/Unit` for domain/application unit checks without infrastructure boot.
+- `tests/Integration` for kernel-level API and persistence scenarios in `APP_ENV=test`.
+
+Run the full suite from Docker:
+
+```bash
+docker compose exec -T mysql mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS app_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON app_test.* TO 'app'@'%'; FLUSH PRIVILEGES;"
+docker compose exec php php vendor/bin/simple-phpunit
+```
+
+Useful subsets:
+
+```bash
+docker compose exec php php vendor/bin/simple-phpunit tests/Unit
+docker compose exec php php vendor/bin/simple-phpunit tests/Integration
 ```

@@ -16,17 +16,52 @@ final class Version20260330170000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('CREATE TABLE IF NOT EXISTS user_registration_context (user_id BINARY(16) NOT NULL COMMENT "(DC2Type:uuid)", device_fingerprint_hash VARCHAR(64) DEFAULT NULL, registration_ip_hash VARCHAR(64) DEFAULT NULL, registration_ip_counter_date DATE DEFAULT NULL COMMENT "(DC2Type:date_immutable)", created_at DATETIME NOT NULL COMMENT "(DC2Type:datetime_immutable)", updated_at DATETIME NOT NULL COMMENT "(DC2Type:datetime_immutable)", PRIMARY KEY(user_id), CONSTRAINT FK_USER_REGISTRATION_CONTEXT_USER FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE IF NOT EXISTS user_registration_context (
+        user_id BINARY(16) NOT NULL COMMENT "(DC2Type:uuid)",
+        device_fingerprint_hash VARCHAR(64) DEFAULT NULL,
+        registration_ip_hash VARCHAR(64) DEFAULT NULL,
+        registration_ip_counter_date DATE DEFAULT NULL COMMENT "(DC2Type:date_immutable)",
+        created_at DATETIME NOT NULL COMMENT "(DC2Type:datetime_immutable)",
+        updated_at DATETIME NOT NULL COMMENT "(DC2Type:datetime_immutable)",
+        PRIMARY KEY(user_id),
+        CONSTRAINT FK_USER_REGISTRATION_CONTEXT_USER FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+
         $this->addSql('CREATE UNIQUE INDEX uniq_user_registration_context_fingerprint_hash ON user_registration_context (device_fingerprint_hash)');
         $this->addSql('CREATE INDEX idx_user_registration_context_ip_date ON user_registration_context (registration_ip_hash, registration_ip_counter_date)');
         $this->addSql('CREATE INDEX idx_user_registration_context_updated_at ON user_registration_context (updated_at)');
 
-        $this->addSql('ALTER TABLE users DROP COLUMN IF EXISTS device_fingerprint, DROP COLUMN IF EXISTS registration_ip, DROP COLUMN IF EXISTS registration_ip_counter_date');
+        // --- users columns ---
+        $table = $schema->getTable('users');
 
-        $this->addSql('DROP INDEX idx_login_token_lookup ON login_tokens');
+        if ($table->hasColumn('device_fingerprint')) {
+            $this->addSql('ALTER TABLE users DROP COLUMN device_fingerprint');
+        }
+
+        if ($table->hasColumn('registration_ip')) {
+            $this->addSql('ALTER TABLE users DROP COLUMN registration_ip');
+        }
+
+        if ($table->hasColumn('registration_ip_counter_date')) {
+            $this->addSql('ALTER TABLE users DROP COLUMN registration_ip_counter_date');
+        }
+
+        // --- login_tokens indexes ---
+        $table = $schema->getTable('login_tokens');
+
+        if ($table->hasIndex('idx_login_token_lookup')) {
+            $this->addSql('DROP INDEX idx_login_token_lookup ON login_tokens');
+        }
+
         $this->addSql('CREATE INDEX idx_login_token_consume ON login_tokens (email, token_hash, used_at, expires_at)');
 
-        $this->addSql('DROP INDEX idx_access_token_hash ON access_tokens');
+        // --- access_tokens indexes ---
+        $table = $schema->getTable('access_tokens');
+
+        if ($table->hasIndex('idx_access_token_hash')) {
+            $this->addSql('DROP INDEX idx_access_token_hash ON access_tokens');
+        }
+
         $this->addSql('CREATE INDEX idx_access_token_user_expires_at ON access_tokens (user_id, expires_at)');
     }
 
