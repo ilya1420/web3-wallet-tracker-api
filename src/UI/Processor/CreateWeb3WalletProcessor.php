@@ -13,11 +13,14 @@ use App\Application\Exception\Web3WalletAlreadyExistsException;
 use App\Application\UseCase\CreateWeb3WalletUseCase;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\BadGatewayHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
+/**
+ * @implements ProcessorInterface<CreateWeb3WalletInput, ApiDataResponse>
+ */
 final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
 {
     public function __construct(
@@ -28,8 +31,6 @@ final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
-        \assert($data instanceof CreateWeb3WalletInput);
-
         $user = $this->security->getUser();
         if (!$user instanceof User) {
             throw new UnauthorizedHttpException('Bearer', 'Authentication required.');
@@ -40,7 +41,7 @@ final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
         } catch (Web3WalletAlreadyExistsException $e) {
             throw new ConflictHttpException($e->getMessage(), $e);
         } catch (Web3ProviderException $e) {
-            throw new BadGatewayHttpException($e->getMessage(), $e);
+            throw new HttpException(502, $e->getMessage(), $e);
         } catch (\InvalidArgumentException $e) {
             throw new UnprocessableEntityHttpException($e->getMessage(), $e);
         }
