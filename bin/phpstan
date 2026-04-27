@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if [ "$#" -eq 0 ]; then
+    set -- analyse
+fi
+
+case "$1" in
+    analyse|clear-result-cache|dump-deps|help|list)
+        ;;
+    *)
+        set -- analyse "$@"
+        ;;
+esac
+
+if command -v php >/dev/null 2>&1 && [ -x "$ROOT_DIR/vendor/bin/phpstan" ]; then
+    exec php -d memory_limit=1G "$ROOT_DIR/vendor/bin/phpstan" --configuration="$ROOT_DIR/phpstan.neon.dist" "$@"
+fi
+
+if docker compose ps php >/dev/null 2>&1; then
+    exec docker compose exec php php -d memory_limit=1G vendor/bin/phpstan --configuration=phpstan.neon.dist "$@"
+fi
+
+exec docker compose run --rm php php -d memory_limit=1G vendor/bin/phpstan --configuration=phpstan.neon.dist "$@"

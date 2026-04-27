@@ -4,6 +4,8 @@ parameters:
   app.login_token_ttl: '%env(LOGIN_TOKEN_TTL)%'
   app.access_token_ttl: '%env(ACCESS_TOKEN_TTL)%'
   app.registration_max_per_ip_day: '%env(int:REGISTRATION_MAX_PER_IP_DAY)%'
+  app.web3.default_rpc_endpoint: '%env(WEB3_DEFAULT_RPC_URL)%'
+  app.web3.request_timeout: '%env(float:WEB3_REQUEST_TIMEOUT)%'
 
 services:
   _defaults:
@@ -19,6 +21,9 @@ services:
   App\Domain\Repository\UserRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\UserRepository'
   App\Domain\Repository\LoginTokenRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\LoginTokenRepository'
   App\Domain\Repository\AccessTokenRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\AccessTokenRepository'
+  App\Domain\Repository\Web3WalletRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\Web3WalletRepository'
+
+  App\Application\Service\Web3ProviderGatewayInterface: '@App\Infrastructure\Web3\Web3ProviderGateway'
 
   App\Application\Service\LoginRateLimiterService:
     arguments:
@@ -41,6 +46,14 @@ services:
   App\Application\UseCase\ConfirmLoginTokenUseCase:
     arguments:
       $accessTokenTtl: '%app.access_token_ttl%'
+
+  App\Application\UseCase\CreateWeb3WalletUseCase:
+    arguments:
+      $defaultRpcEndpoint: '%app.web3.default_rpc_endpoint%'
+
+  App\Infrastructure\Web3\Web3ProviderGateway:
+    arguments:
+      $requestTimeout: '%app.web3.request_timeout%'
 
   App\Infrastructure\Mail\LoginLinkMailer:
     arguments:

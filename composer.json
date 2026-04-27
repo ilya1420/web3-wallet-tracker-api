@@ -16,8 +16,8 @@
     "symfony/amqp-messenger": "^7.3",
     "symfony/cache": "^7.3",
     "symfony/console": "^7.3",
-    "symfony/dotenv": "^7.3",
     "symfony/doctrine-messenger": "^7.3",
+    "symfony/dotenv": "^7.3",
     "symfony/flex": "^2",
     "symfony/framework-bundle": "^7.3",
     "symfony/mailer": "^7.3",
@@ -33,10 +33,15 @@
     "symfony/twig-bundle": "^7.3",
     "symfony/uid": "^7.3",
     "symfony/validator": "^7.3",
-    "symfony/yaml": "^7.3"
+    "symfony/yaml": "^7.3",
+    "web3p/web3.php": "^0.3.2"
   },
   "require-dev": {
     "doctrine/doctrine-fixtures-bundle": "^3.6",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-doctrine": "^2.0",
+    "phpstan/phpstan-symfony": "^2.0",
     "symfony/maker-bundle": "^1.61",
     "symfony/phpunit-bridge": "^7.3"
   },
@@ -51,6 +56,11 @@
     }
   },
   "scripts": {
+    "stan": [
+      "@phpstan"
+    ],
+    "phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --ansi",
+    "phpstan:baseline": "php -d memory_limit=1G vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --generate-baseline=phpstan-baseline.neon",
     "auto-scripts": {
       "cache:clear": "symfony-cmd"
     },
@@ -63,6 +73,7 @@
   },
   "config": {
     "allow-plugins": {
+      "phpstan/extension-installer": true,
       "symfony/flex": true,
       "symfony/runtime": true
     },

@@ -1,0 +1,157 @@
+parameters:
+	ignoreErrors:
+		-
+			rawMessage: 'Method App\Application\DTO\MeOutput::__construct() has parameter $roles with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Application/DTO/MeOutput.php
+
+		-
+			rawMessage: 'Parameter #1 $length of function random_bytes expects int<1, max>, int given.'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Service/TokenManager.php
+
+		-
+			rawMessage: 'Parameter $roles of class App\Application\DTO\AdminUserOutput constructor expects list<string>, array<string> given.'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Service/UserOutputMapper.php
+
+		-
+			rawMessage: 'Method App\Domain\Entity\User::__construct() has parameter $roles with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Domain/Entity/User.php
+
+		-
+			rawMessage: 'Method App\Domain\Entity\User::changeRoles() has parameter $roles with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Domain/Entity/User.php
+
+		-
+			rawMessage: 'Method App\Domain\Entity\User::getUserIdentifier() should return non-empty-string but returns string.'
+			identifier: return.type
+			count: 1
+			path: src/Domain/Entity/User.php
+
+		-
+			rawMessage: Instantiated class Symfony\Component\Messenger\Exception\MessageEncodingFailedException not found.
+			identifier: class.notFound
+			count: 2
+			path: src/Infrastructure/Messaging/Transport/JsonMessengerSerializer.php
+
+		-
+			rawMessage: 'Method App\Infrastructure\Messaging\Transport\JsonMessengerSerializer::decode() has parameter $encodedEnvelope with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Infrastructure/Messaging/Transport/JsonMessengerSerializer.php
+
+		-
+			rawMessage: 'Method App\Infrastructure\Messaging\Transport\JsonMessengerSerializer::encode() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Infrastructure/Messaging/Transport/JsonMessengerSerializer.php
+
+		-
+			rawMessage: Throwing object of an unknown class Symfony\Component\Messenger\Exception\MessageEncodingFailedException.
+			identifier: class.notFound
+			count: 2
+			path: src/Infrastructure/Messaging/Transport/JsonMessengerSerializer.php
+
+		-
+			rawMessage: 'Class App\Infrastructure\Persistence\Doctrine\Repository\AccessTokenRepository extends generic class Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository but does not specify its types: TEntityClass'
+			identifier: missingType.generics
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/AccessTokenRepository.php
+
+		-
+			rawMessage: 'Class App\Infrastructure\Persistence\Doctrine\Repository\LoginTokenRepository extends generic class Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository but does not specify its types: TEntityClass'
+			identifier: missingType.generics
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/LoginTokenRepository.php
+
+		-
+			rawMessage: 'Class App\Infrastructure\Persistence\Doctrine\Repository\UserRegistrationContextRepository extends generic class Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository but does not specify its types: TEntityClass'
+			identifier: missingType.generics
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/UserRegistrationContextRepository.php
+
+		-
+			rawMessage: 'Method App\Infrastructure\Persistence\Doctrine\Repository\UserRegistrationContextRepository::findOneByUser() should return App\Infrastructure\Persistence\Doctrine\Entity\UserRegistrationContext|null but returns object|null.'
+			identifier: return.type
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/UserRegistrationContextRepository.php
+
+		-
+			rawMessage: 'Class App\Infrastructure\Persistence\Doctrine\Repository\UserRepository extends generic class Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository but does not specify its types: TEntityClass'
+			identifier: missingType.generics
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/UserRepository.php
+
+		-
+			rawMessage: 'Method App\Infrastructure\Persistence\Doctrine\Repository\UserRepository::findByEmail() should return App\Domain\Entity\User|null but returns object|null.'
+			identifier: return.type
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/UserRepository.php
+
+		-
+			rawMessage: 'Method App\Infrastructure\Persistence\Doctrine\Repository\UserRepository::findById() should return App\Domain\Entity\User|null but returns object|null.'
+			identifier: return.type
+			count: 1
+			path: src/Infrastructure/Persistence/Doctrine/Repository/UserRepository.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\AdminCreateUserProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/AdminCreateUserProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\AdminDeleteUserProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/AdminDeleteUserProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\AdminUpdateUserProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/AdminUpdateUserProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\ConfirmTokenProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/ConfirmTokenProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\RegisterUserProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/RegisterUserProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Processor\RequestLoginLinkProcessor implements generic interface ApiPlatform\State\ProcessorInterface but does not specify its types: T1, T2'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Processor/RequestLoginLinkProcessor.php
+
+		-
+			rawMessage: 'Class App\UI\Provider\AdminUserItemProvider implements generic interface ApiPlatform\State\ProviderInterface but does not specify its types: T'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Provider/AdminUserItemProvider.php
+
+		-
+			rawMessage: 'Class App\UI\Provider\AdminUsersProvider implements generic interface ApiPlatform\State\ProviderInterface but does not specify its types: T'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Provider/AdminUsersProvider.php
+
+		-
+			rawMessage: 'Class App\UI\Provider\MeProvider implements generic interface ApiPlatform\State\ProviderInterface but does not specify its types: T'
+			identifier: missingType.generics
+			count: 1
+			path: src/UI/Provider/MeProvider.php
