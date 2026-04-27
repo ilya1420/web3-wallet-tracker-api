@@ -13,6 +13,7 @@ Production-grade stateless REST API on Symfony + API Platform with DDD architect
 - Mailhog
 - Doctrine ORM + Migrations + Fixtures
 - Symfony Messenger
+- web3php (`web3p/web3.php`)
 
 ## Project Structure
 
@@ -32,6 +33,7 @@ Production-grade stateless REST API on Symfony + API Platform with DDD architect
 - `Messaging/` async messages and handlers
 - `Mail/` mail transport adapter
 - `Security/` bearer token authenticator
+- `Web3/` adapter over `web3php` RPC client
 - `UI/`
 - `Controller/` API Platform resources (route contracts)
 - `Processor/` write-side handlers
@@ -50,6 +52,8 @@ Public:
 Authenticated:
 
 - `GET /api/me`
+- `POST /api/web3/wallets`
+- `GET /api/web3/wallets/{id}/balance`
 
 Admin (`ROLE_ADMIN`):
 
@@ -129,6 +133,13 @@ RabbitMQ message body format (cross-language friendly JSON):
 4. `AdminCreateUserProcessor` / `AdminUpdateUserProcessor` / `AdminDeleteUserProcessor` perform write operations through domain repositories.
 5. Admin outputs include hashed registration context from the dedicated projection table.
 
+### 6) Web3 wallet tracking
+
+1. Authenticated user sends `POST /api/web3/wallets` with wallet address and optional RPC endpoint.
+2. Service resolves `networkId` via `web3php` (`net_version`) and stores wallet metadata in `web3_wallets`.
+3. Client calls `GET /api/web3/wallets/{id}/balance`.
+4. Service fetches on-chain balance via `web3php` (`eth_getBalance`), persists `lastKnownBalanceWei` + `lastSyncedAt`, and returns normalized wei/eth response.
+
 ## Run With Docker
 
 1. Start containers:
@@ -161,6 +172,27 @@ docker compose exec php php bin/console doctrine:fixtures:load --no-interaction
 docker compose logs -f worker
 ```
 
+## Static Analysis
+
+PHPStan is configured with Symfony and Doctrine extensions, elevated strictness (`level 8`), and a committed baseline for legacy issues.
+
+Convenient commands:
+
+```bash
+./bin/phpstan
+docker compose exec php composer stan
+docker compose exec php composer phpstan:baseline
+```
+
+Before the first run, install dev dependencies:
+
+```bash
+docker compose exec php composer install
+docker compose exec php php bin/console cache:warmup
+```
+
+CI runs static analysis in [`.github/workflows/phpstan.yml`](/home/ilya1420/symfony/.github/workflows/phpstan.yml) through Docker Compose to match the local environment.
+
 ## Service URLs
 
 - API root: `http://localhost:8080/api`
@@ -184,6 +216,7 @@ docker compose logs -f worker
 - Anti-abuse registration data is stored separately from `users` in `user_registration_context`.
 - DTOs are used for all API contracts; Doctrine entities are never exposed directly.
 - SMTP sender is configured via `MAILER_FROM`.
+- Web3 defaults are configured via `WEB3_DEFAULT_RPC_URL` and `WEB3_REQUEST_TIMEOUT`.
 - Success responses are unified JSON: `{"data": ...}`.
 - Error responses are unified JSON: `{"message":"<text>"}` with proper HTTP status code.
 - API errors are logged by Monolog and visible in container logs.
@@ -252,4 +285,20 @@ Admin delete user:
 ```bash
 curl -X DELETE http://localhost:8080/api/admin/users/<user-id> \
   -H 'Authorization: Bearer <admin-access-token>'
+```
+
+Create tracked web3 wallet:
+
+```bash
+curl -X POST http://localhost:8080/api/web3/wallets \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <access-token>' \
+  -d '{"address":"0x742d35Cc6634C0532925a3b844Bc454e4438f44e","rpcEndpoint":"https://ethereum.publicnode.com"}'
+```
+
+Refresh and read wallet balance:
+
+```bash
+curl http://localhost:8080/api/web3/wallets/<wallet-id>/balance \
+  -H 'Authorization: Bearer <access-token>'
 ```

@@ -25,5 +25,6 @@ security:
     - { path: ^/api/auth/login-links, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/request-login-link, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/confirm-token, roles: PUBLIC_ACCESS }
+    - { path: ^/api/web3, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/me, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/admin/users, roles: ROLE_ADMIN }

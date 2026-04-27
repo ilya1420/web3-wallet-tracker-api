@@ -1,0 +1,17 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+    tmpDir: var/phpstan
+    treatPhpDocTypesAsCertain: true
+    inferPrivatePropertyTypeFromConstructor: true
+    reportUnmatchedIgnoredErrors: true
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+        consoleApplicationLoader: tools/phpstan/console-application.php
+    doctrine:
+        objectManagerLoader: tools/phpstan/object-manager.php
