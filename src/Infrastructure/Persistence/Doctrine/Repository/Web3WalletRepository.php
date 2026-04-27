@@ -10,6 +10,9 @@ use App\Domain\Repository\Web3WalletRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Web3Wallet>
+ */
 final class Web3WalletRepository extends ServiceEntityRepository implements Web3WalletRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
@@ -28,18 +31,24 @@ final class Web3WalletRepository extends ServiceEntityRepository implements Web3
 
     public function findForUserById(User $user, string $id): ?Web3Wallet
     {
-        return $this->findOneBy([
+        /** @var Web3Wallet|null $wallet */
+        $wallet = $this->findOneBy([
             'id' => $id,
             'user' => $user,
         ]);
+
+        return $wallet;
     }
 
     public function findOneByUserAddressAndNetwork(User $user, string $address, string $networkId): ?Web3Wallet
     {
-        return $this->findOneBy([
+        /** @var Web3Wallet|null $wallet */
+        $wallet = $this->findOneBy([
             'user' => $user,
             'address' => $address,
             'networkId' => $networkId,
         ]);
+
+        return $wallet;
     }
 }

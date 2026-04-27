@@ -12,10 +12,13 @@ use App\Application\Exception\Web3WalletNotFoundException;
 use App\Application\UseCase\GetWeb3WalletBalanceUseCase;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\BadGatewayHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
+/**
+ * @implements ProviderInterface<ApiDataResponse>
+ */
 final readonly class Web3WalletBalanceProvider implements ProviderInterface
 {
     public function __construct(
@@ -38,7 +41,7 @@ final readonly class Web3WalletBalanceProvider implements ProviderInterface
         } catch (Web3WalletNotFoundException $e) {
             throw new NotFoundHttpException($e->getMessage(), $e);
         } catch (Web3ProviderException $e) {
-            throw new BadGatewayHttpException($e->getMessage(), $e);
+            throw new HttpException(502, $e->getMessage(), $e);
         }
     }
 }
