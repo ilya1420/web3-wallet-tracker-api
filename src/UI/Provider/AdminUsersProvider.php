@@ -11,6 +11,9 @@ use App\Application\Service\MultiAccountGuardService;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Repository\UserRepositoryInterface;
 
+/**
+ * @implements ProviderInterface<ApiDataResponse>
+ */
 final readonly class AdminUsersProvider implements ProviderInterface
 {
     public function __construct(

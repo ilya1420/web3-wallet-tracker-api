@@ -19,6 +19,7 @@ use App\UI\Provider\AdminUsersProvider;
             output: ApiDataResponse::class,
             name: 'admin_users_list',
             provider: AdminUsersProvider::class,
+            security: "is_granted('ROLE_ADMIN')",
         ),
         new Post(
             uriTemplate: '/admin/users',
@@ -27,6 +28,7 @@ use App\UI\Provider\AdminUsersProvider;
             read: false,
             name: 'admin_users_create',
             processor: AdminCreateUserProcessor::class,
+            security: "is_granted('ROLE_ADMIN')",
         ),
     ],
     paginationEnabled: false,

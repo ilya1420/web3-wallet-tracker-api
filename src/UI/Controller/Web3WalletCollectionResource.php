@@ -19,6 +19,7 @@ use App\UI\Processor\CreateWeb3WalletProcessor;
             read: false,
             name: 'web3_wallets_create',
             processor: CreateWeb3WalletProcessor::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
         ),
     ],
 )]

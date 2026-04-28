@@ -8,12 +8,16 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Application\DTO\AdminUpdateUserInput;
 use App\Application\DTO\ApiDataResponse;
+use App\Application\Exception\UserNotFoundException;
 use App\Application\Service\MultiAccountGuardService;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Repository\UserRepositoryInterface;
+use App\UI\Input\DtoInputResolver;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * @implements ProcessorInterface<AdminUpdateUserInput, ApiDataResponse>
+ */
 final readonly class AdminUpdateUserProcessor implements ProcessorInterface
 {
     public function __construct(
@@ -21,24 +25,26 @@ final readonly class AdminUpdateUserProcessor implements ProcessorInterface
         private UserOutputMapper $mapper,
         private MultiAccountGuardService $multiAccountGuard,
         private EntityManagerInterface $entityManager,
+        private DtoInputResolver $inputResolver,
     ) {
     }
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
-        \assert($data instanceof AdminUpdateUserInput);
+        /** @var AdminUpdateUserInput $input */
+        $input = $this->inputResolver->resolveAndValidate($data, AdminUpdateUserInput::class);
 
         $id = (string) ($uriVariables['id'] ?? '');
         $user = $this->userRepository->findById($id);
 
         if ($user === null) {
-            throw new NotFoundHttpException('User not found.');
+            throw new UserNotFoundException('User not found.');
         }
 
         $context = $this->multiAccountGuard->findContext($user);
 
-        if ($data->roles !== null) {
-            $user->changeRoles($data->roles);
+        if ($input->roles !== null) {
+            $user->changeRoles($input->roles);
         }
 
         $this->entityManager->getConnection()->transactional(function () use ($user): void {

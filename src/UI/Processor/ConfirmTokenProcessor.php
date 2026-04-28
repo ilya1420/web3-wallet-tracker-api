@@ -8,24 +8,25 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Application\DTO\ApiDataResponse;
 use App\Application\DTO\ConfirmTokenInput;
-use App\Application\Exception\InvalidLoginTokenException;
 use App\Application\UseCase\ConfirmLoginTokenUseCase;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use App\UI\Input\DtoInputResolver;
 
+/**
+ * @implements ProcessorInterface<ConfirmTokenInput, ApiDataResponse>
+ */
 final readonly class ConfirmTokenProcessor implements ProcessorInterface
 {
-    public function __construct(private ConfirmLoginTokenUseCase $useCase)
-    {
+    public function __construct(
+        private ConfirmLoginTokenUseCase $useCase,
+        private DtoInputResolver $inputResolver,
+    ) {
     }
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
-        \assert($data instanceof ConfirmTokenInput);
+        /** @var ConfirmTokenInput $input */
+        $input = $this->inputResolver->resolveAndValidate($data, ConfirmTokenInput::class);
 
-        try {
-            return new ApiDataResponse($this->useCase->execute($data->email, $data->token));
-        } catch (InvalidLoginTokenException $e) {
-            throw new UnauthorizedHttpException('Bearer', $e->getMessage(), $e);
-        }
+        return new ApiDataResponse($this->useCase->execute($input->email, $input->token));
     }
 }

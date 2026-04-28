@@ -8,15 +8,11 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Application\DTO\ApiDataResponse;
 use App\Application\DTO\CreateWeb3WalletInput;
-use App\Application\Exception\Web3ProviderException;
-use App\Application\Exception\Web3WalletAlreadyExistsException;
 use App\Application\UseCase\CreateWeb3WalletUseCase;
 use App\Domain\Entity\User;
+use App\UI\Input\DtoInputResolver;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * @implements ProcessorInterface<CreateWeb3WalletInput, ApiDataResponse>
@@ -26,24 +22,20 @@ final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
     public function __construct(
         private CreateWeb3WalletUseCase $useCase,
         private Security $security,
+        private DtoInputResolver $inputResolver,
     ) {
     }
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ApiDataResponse
     {
+        /** @var CreateWeb3WalletInput $input */
+        $input = $this->inputResolver->resolveAndValidate($data, CreateWeb3WalletInput::class);
+
         $user = $this->security->getUser();
         if (!$user instanceof User) {
-            throw new UnauthorizedHttpException('Bearer', 'Authentication required.');
+            throw new AccessDeniedException('Authentication required.');
         }
 
-        try {
-            return new ApiDataResponse($this->useCase->execute($user, $data->address, $data->rpcEndpoint));
-        } catch (Web3WalletAlreadyExistsException $e) {
-            throw new ConflictHttpException($e->getMessage(), $e);
-        } catch (Web3ProviderException $e) {
-            throw new HttpException(502, $e->getMessage(), $e);
-        } catch (\InvalidArgumentException $e) {
-            throw new UnprocessableEntityHttpException($e->getMessage(), $e);
-        }
+        return new ApiDataResponse($this->useCase->execute($user, $input->address, $input->rpcEndpoint));
     }
 }

@@ -16,6 +16,7 @@ use App\UI\Provider\MeProvider;
             output: ApiDataResponse::class,
             name: 'me',
             provider: MeProvider::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
         ),
     ],
 )]
