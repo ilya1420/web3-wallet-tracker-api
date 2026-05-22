@@ -16,6 +16,7 @@ use App\UI\Provider\Web3WalletBalanceProvider;
             output: ApiDataResponse::class,
             name: 'web3_wallet_balance_get',
             provider: Web3WalletBalanceProvider::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
         ),
     ],
 )]

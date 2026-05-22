@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
@@ -22,23 +23,26 @@ class BearerTokenAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
-        return str_starts_with((string) $request->headers->get('Authorization'), 'Bearer ');
+        $auth = $request->headers->get('Authorization');
+
+        return is_string($auth) && str_starts_with($auth, 'Bearer ');
     }
 
     public function authenticate(Request $request): SelfValidatingPassport
     {
         $rawToken = $this->extractBearerToken($request);
         if ($rawToken === '') {
-            throw new AuthenticationException('Missing bearer token.');
+            throw new CustomUserMessageAuthenticationException('Missing bearer token.');
         }
 
         $user = $this->accessTokenUserResolver->resolve($rawToken);
-        if ($user === null) {
-            throw new AuthenticationException('Invalid or expired access token.');
+
+        if (!$user) {
+            throw new CustomUserMessageAuthenticationException('Invalid or expired access token.');
         }
 
         return new SelfValidatingPassport(
-            new UserBadge($user->getUserIdentifier(), static fn () => $user),
+            new UserBadge($user->getUserIdentifier())
         );
     }
 

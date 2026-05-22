@@ -10,8 +10,11 @@ use App\Application\DTO\ApiDataResponse;
 use App\Application\Service\UserOutputMapper;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
+/**
+ * @implements ProviderInterface<ApiDataResponse>
+ */
 final readonly class MeProvider implements ProviderInterface
 {
     public function __construct(
@@ -25,7 +28,7 @@ final readonly class MeProvider implements ProviderInterface
         $user = $this->security->getUser();
 
         if (!$user instanceof User) {
-            throw new UnauthorizedHttpException('Bearer', 'Authentication required.');
+            throw new AccessDeniedException('Authentication required.');
         }
 
         return new ApiDataResponse($this->mapper->toMeOutput($user));

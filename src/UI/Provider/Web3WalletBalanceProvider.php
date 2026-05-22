@@ -7,14 +7,10 @@ namespace App\UI\Provider;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Application\DTO\ApiDataResponse;
-use App\Application\Exception\Web3ProviderException;
-use App\Application\Exception\Web3WalletNotFoundException;
 use App\Application\UseCase\GetWeb3WalletBalanceUseCase;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * @implements ProviderInterface<ApiDataResponse>
@@ -31,17 +27,11 @@ final readonly class Web3WalletBalanceProvider implements ProviderInterface
     {
         $user = $this->security->getUser();
         if (!$user instanceof User) {
-            throw new UnauthorizedHttpException('Bearer', 'Authentication required.');
+            throw new AccessDeniedException('Authentication required.');
         }
 
         $walletId = (string) ($uriVariables['id'] ?? '');
 
-        try {
-            return new ApiDataResponse($this->useCase->execute($user, $walletId));
-        } catch (Web3WalletNotFoundException $e) {
-            throw new NotFoundHttpException($e->getMessage(), $e);
-        } catch (Web3ProviderException $e) {
-            throw new HttpException(502, $e->getMessage(), $e);
-        }
+        return new ApiDataResponse($this->useCase->execute($user, $walletId));
     }
 }

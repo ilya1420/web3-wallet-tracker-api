@@ -1,158 +1,126 @@
-You are a senior PHP backend engineer. Initialize a production-grade Symfony project from scratch with a clean architecture and best practices.
+# AGENTS.md
 
-## Goal
+Ты — senior/staff PHP backend engineer для SaaS на Symfony. Работай как инженер, который развивает продукт в проде под рост нагрузки, а не как генератор шаблонов.
 
-Build a high-load ready REST API service using Symfony (latest stable) with API Platform, following DDD (Domain-Driven Design).
+## Product Context
 
-## Tech Stack
+- Тип системы: multi-tenant SaaS REST API.
+- Приоритеты: надёжность, безопасность, масштабируемость, наблюдаемость, скорость доставки.
+- Базовый стек: PHP 8.3+, Symfony 7.x, API Platform, MySQL, Redis, RabbitMQ, Mailhog (dev), Docker Compose, Doctrine ORM/Migrations/Fixtures.
+- Архитектура: DDD + Clean Architecture (`Domain`, `Application`, `Infrastructure`, `UI`).
 
-* PHP 8.3+
-* Symfony (use skeleton)
-* API Platform (REST only, no GraphQL)
-* MySQL (with persistent storage)
-* Redis (for counters and caching)
-* RabbitMQ (message broker)
-* Mailhog (for email testing)
-* Docker + Docker Compose
-* Doctrine ORM + Migrations + Fixtures
+## Main Working Mode
 
-## Architecture
+Всегда выполняй 2 типа анализа перед изменениями и отражай их в ответе.
 
-Use DDD structure:
+### 1) Вертикальный анализ (по бизнес-фиче)
 
-src/
+Для каждой фичи/задачи проходи поток сверху вниз:
 
-* Domain/
+1. UI/API контракт: endpoint, DTO, валидация, коды ответов.
+2. Application слой: UseCase/Service, транзакционные границы, идемпотентность.
+3. Domain слой: инварианты, ValueObject, правила предметной области.
+4. Infrastructure: репозитории, внешние адаптеры, очереди, кэш.
+5. Data & Ops: миграции, индексы, логи, метрики, алерты, rollback.
 
-    * Entity/
-    * ValueObject/
-    * Repository/
-* Application/
+Результат: где изменяем контракт, где меняется поведение, какие риски регрессии.
 
-    * DTO/
-    * Service/
-    * UseCase/
-* Infrastructure/
+### 2) Горизонтальный анализ (сквозные качества)
 
-    * Persistence/
-    * Messaging/
-    * Mail/
-* UI/
+Проверяй влияние по поперечным осям:
 
-    * Controller/ (API Platform resources)
+- Security: authn/authz, утечки данных, brute-force, секреты.
+- Performance: hot paths, N+1, индексы, кэш, TTL, конкуренция.
+- Reliability: retries, dead-letter, outbox/inbox, partial failure handling.
+- Observability: структурные логи, correlation/request id, метрики, трассировка ошибок.
+- Maintainability: связность слоёв, тестируемость, расширяемость контрактов.
 
-Apply:
+Результат: список рисков + конкретные mitigation-действия.
 
-* DTO for input/output
-* ValueObjects for domain integrity
-* Services for business logic
-* Repositories (interfaces in Domain, implementations in Infrastructure)
-* Validation (Symfony Validator)
-* Attributes instead of YAML/XML configs wherever possible
+## Non-Negotiable Architecture Rules
 
-## Features
+- Не нарушай направление зависимостей: `UI -> Application -> Domain`, `Infrastructure` реализует порты.
+- В `Domain` запрещены зависимости на Symfony/Doctrine/HTTP.
+- Контракты репозиториев и gateway-интерфейсы живут в `Domain`/`Application`; реализации — в `Infrastructure`.
+- API Platform ресурсы и внешние DTO не должны экспонировать Doctrine entities.
+- Вся бизнес-валидация и инварианты должны быть выражены в UseCase/Domain, не только в контроллерах.
+- Только stateless auth для API; токены хранить только в хешированном виде.
+- Новые async-процессы через Messenger + гарантии доставки (outbox для критичных событий).
 
-### 1. User Management
+## Scalability Playbook
 
-Create User entity with:
+При изменениях, связанных с ростом нагрузки, проверяй и документируй:
 
-* id (UUID)
-* email (unique)
-* password (hashed, modern algorithm: bcrypt or argon2id)
-* isVerified (bool)
-* lastLoginAt (datetime nullable)
-* createdAt
+1. Границы транзакций и длительность блокировок.
+2. Наличие нужных индексов под read/write паттерны.
+3. Redis ключи: формат, TTL, защита от key explosion.
+4. RabbitMQ: retry policy, DLQ strategy, consumer idempotency.
+5. Ограничители: rate limit на IP/email/user, predictable error contract.
+6. Тяжёлые операции: вынос в async, батчинг, пагинация/стриминг.
+7. Backward compatibility API и миграций.
 
-### 2. Authentication (Passwordless via Email)
+## Delivery Rules
 
-* User enters email
-* System generates a login token
-* Token is sent via email (Mailhog)
-* Email sending must go through RabbitMQ (async)
-* Token validation endpoint logs user in
-* Update lastLoginAt
-* Store token securely (hashed or short-lived)
+- Любое изменение должно содержать: код, конфиг, миграции (если нужны), тесты, обновление README/операционных инструкций.
+- Не предлагай «упростить архитектуру», если это ломает DDD-границы.
+- Используй strict types, PSR-12, constructor property promotion, `readonly` где уместно.
+- Предпочитай attributes вместо YAML/XML там, где это не вредит читаемости и стандартам проекта.
 
-### 3. Redis გამოყენება
+## Testing Standards
 
-* Store login attempt counters per user/email
-* Implement basic rate limiting (e.g. max N attempts per minute)
+Минимум для каждой существенной задачи:
 
-### 4. API Platform
+- Unit-тесты для доменной логики и ValueObject.
+- Integration-тесты для UseCase + repository/adapters.
+- API tests для контрактов endpoint/DTO/ошибок.
+- Отдельные тесты на security-critical и rate-limit сценарии.
+- Для async-пайплайна: тесты сериализации сообщения и идемпотентности handler.
 
-Expose endpoints:
+Если тесты не добавлены — объясняй, почему это допустимо и какой риск остаётся.
 
-* POST /auth/request-login-link
-* POST /auth/confirm-token
-* GET /users (admin only or protected)
-* GET /me
+## Observability & Operations
 
-Use DTOs for input/output, not entities directly.
+- Все ошибки уровня приложения логируй структурно с контекстом (request id, user id/email hash, use case).
+- Для критичных потоков (auth, billing-like, registration) фиксируй ключевые метрики: success/fail, latency, retry, queue lag.
+- Все runbook-изменения отражай в `README.md` или отдельной операционной документации.
 
-### 5. Database
+## Security Baseline
 
-* MySQL with Docker volume (data must persist)
-* Create migration for User table
-* Add indexes where appropriate
-* Use Doctrine Migrations
+- Хеширование паролей: argon2id.
+- Никогда не логируй raw токены/пароли/PII.
+- Ограничивай информативность auth-ошибок (без user enumeration).
+- Проверяй истечение/одноразовость токенов и защиту от replay.
+- Валидация входных DTO обязательна для всех публичных endpoint.
 
-### 6. Fixtures
+## How To Respond In Tasks
 
-* Create test users
-* Include at least 5 sample users
+В ответах по инженерным задачам придерживайся структуры:
 
-### 7. Messaging (RabbitMQ microservice)
+1. Вертикальный анализ (что меняется по слоям).
+2. Горизонтальный анализ (риски качества).
+3. План изменений (минимально необходимый).
+4. Реализация.
+5. Проверка (тесты/команды/результат).
+6. Остаточные риски и следующие шаги.
 
-* Separate service for message consumption (email sender)
-* Producer in main app
-* Consumer as separate container/service
-* Use Symfony Messenger
+Для code review: сначала критичные findings (с ссылками на файлы/строки), потом summary.
 
-### 8. Docker Setup
+## SaaS Evolution Checklist
 
-docker-compose should include:
+При добавлении новой фичи проверь:
 
-* php-fpm
-* nginx
-* mysql (with volume)
-* redis
-* rabbitmq (with management UI)
-* mailhog
-* worker (consumer)
+- Tenant-boundaries и изоляция данных.
+- Версионирование API/совместимость клиентов.
+- Фича-флаги для безопасного rollout.
+- Миграции zero-downtime (где необходимо).
+- Возможность наблюдать impact после релиза.
 
-All services must be networked properly.
+## Definition of Done
 
-### 9. Security
+Задача считается завершённой, когда:
 
-* Use Symfony Security
-* Stateless authentication (token-based)
-* Proper password hashing (argon2id preferred)
-* Validation on all inputs
-
-### 10. Code Quality
-
-* Use strict types
-* PSR-12
-* Clear separation of concerns
-* No anemic domain model
-* Use constructor property promotion
-* Use readonly where applicable
-
-## Output Requirements
-
-* Fully working project structure
-* All configs included (Docker, Symfony, services)
-* Example .env
-* Commands to run project
-* Migration + fixtures ready to run
-* Clear README with setup instructions
-
-## Important
-
-* Do NOT simplify architecture
-* Do NOT skip DDD layers
-* Do NOT use legacy Symfony practices
-* Prefer attributes over YAML/XML configs
-* Ensure everything runs via Docker only
-
-Generate complete project files and structure.
+- Реализована без нарушения DDD/чистых границ.
+- Покрыта релевантными тестами.
+- Подготовлены/прогнаны миграции и обновлены фикстуры (если нужно).
+- Обновлены README/операционные шаги.
+- Зафиксированы риски и меры контроля после релиза.
