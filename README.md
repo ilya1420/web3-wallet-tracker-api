@@ -196,6 +196,7 @@ docker compose exec php php bin/console cache:warmup
 ```
 
 CI runs static analysis in [`.github/workflows/phpstan.yml`](/home/ilya1420/symfony/.github/workflows/phpstan.yml) through Docker Compose to match the local environment.
+Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes install, cache warmup, and PHPStan in a single container run to reduce total duration.
 
 ## Service URLs
 
