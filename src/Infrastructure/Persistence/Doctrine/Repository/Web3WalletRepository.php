@@ -7,6 +7,7 @@ namespace App\Infrastructure\Persistence\Doctrine\Repository;
 use App\Domain\Entity\User;
 use App\Domain\Entity\Web3Wallet;
 use App\Domain\Repository\Web3WalletRepositoryInterface;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -29,6 +30,15 @@ final class Web3WalletRepository extends ServiceEntityRepository implements Web3
         }
     }
 
+    public function remove(Web3Wallet $wallet, bool $flush = true): void
+    {
+        $this->getEntityManager()->remove($wallet);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
     public function findForUserById(User $user, string $id): ?Web3Wallet
     {
         /** @var Web3Wallet|null $wallet */
@@ -38,6 +48,20 @@ final class Web3WalletRepository extends ServiceEntityRepository implements Web3
         ]);
 
         return $wallet;
+    }
+
+    public function findAllForUser(User $user): array
+    {
+        /** @var list<Web3Wallet> $wallets */
+        $wallets = $this->createQueryBuilder('wallet')
+            ->innerJoin('wallet.user', 'owner')
+            ->andWhere('owner.id = :ownerId')
+            ->setParameter('ownerId', $user->id(), UuidType::NAME)
+            ->orderBy('wallet.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $wallets;
     }
 
     public function findOneByUserAddressAndNetwork(User $user, string $address, string $networkId): ?Web3Wallet
