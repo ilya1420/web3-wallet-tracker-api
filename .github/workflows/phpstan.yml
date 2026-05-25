@@ -10,10 +10,22 @@ on:
 jobs:
   phpstan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            vendor
+            ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Prepare env
         run: cp .env.example .env
@@ -21,11 +33,9 @@ jobs:
       - name: Build PHP image
         run: docker compose build php
 
-      - name: Install dependencies
-        run: docker compose run --rm php composer install --no-interaction --prefer-dist
-
-      - name: Warm up Symfony cache
-        run: docker compose run --rm php php bin/console cache:warmup
-
-      - name: Run PHPStan
-        run: docker compose run --rm php php -d memory_limit=1G vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress
+      - name: Install deps, warmup cache and run PHPStan
+        run: >
+          docker compose run --rm php sh -lc
+          "composer install --no-interaction --prefer-dist &&
+          php bin/console cache:warmup &&
+          php -d memory_limit=1G vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress"
