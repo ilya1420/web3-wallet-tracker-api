@@ -124,4 +124,22 @@ class Web3Wallet
         $this->lastSyncedAt = $now;
         $this->updatedAt = $now;
     }
+
+    public function updateConnection(string $rpcEndpoint, string $networkId): void
+    {
+        $normalizedRpcEndpoint = trim($rpcEndpoint);
+        $normalizedNetworkId = trim($networkId);
+
+        if ($normalizedRpcEndpoint === '') {
+            throw new \InvalidArgumentException('RPC endpoint cannot be empty.');
+        }
+
+        if ($normalizedNetworkId === '') {
+            throw new \InvalidArgumentException('Network id cannot be empty.');
+        }
+
+        $this->rpcEndpoint = $normalizedRpcEndpoint;
+        $this->networkId = $normalizedNetworkId;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 }

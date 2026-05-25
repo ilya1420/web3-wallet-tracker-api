@@ -115,6 +115,16 @@
 - Миграции zero-downtime (где необходимо).
 - Возможность наблюдать impact после релиза.
 
+## Sprint Planning (Execution Source)
+
+- Основной roadmap хранится в `readme_sprint.md`.
+- Любые продуктовые задачи декомпозируй по модели: `Sprint -> Week -> Deliverables`.
+- При планировании нового объёма работ:
+  1. Сначала синхронизируй задачи с ближайшим спринтом в `readme_sprint.md`.
+  2. Затем проверь соответствие `SaaS Evolution Checklist`, `Scalability Playbook` и `Security Baseline`.
+  3. В ответе явно указывай, в какой спринт/неделю попадает изменение.
+- Если меняется приоритет или scope, обновляй `readme_sprint.md` в том же PR/коммите вместе с кодом и тестами.
+
 ## Definition of Done
 
 Задача считается завершённой, когда:

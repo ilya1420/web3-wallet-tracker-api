@@ -53,6 +53,10 @@ Authenticated:
 
 - `GET /api/me`
 - `POST /api/web3/wallets`
+- `GET /api/web3/wallets`
+- `GET /api/web3/wallets/{id}`
+- `PATCH /api/web3/wallets/{id}`
+- `DELETE /api/web3/wallets/{id}`
 - `GET /api/web3/wallets/{id}/balance`
 
 Admin (`ROLE_ADMIN`):
@@ -196,6 +200,7 @@ CI runs static analysis in [`.github/workflows/phpstan.yml`](/home/ilya1420/symf
 ## Service URLs
 
 - API root: `http://localhost:8080/api`
+- Cyberpunk UI: `http://localhost:8080/ui/index.html`
 - App URL used in emails: `http://localhost:8080`
 - RabbitMQ UI: `http://localhost:15672` (`guest` / `guest`)
 - Mailhog UI: `http://localhost:8025`
@@ -302,3 +307,17 @@ Refresh and read wallet balance:
 curl http://localhost:8080/api/web3/wallets/<wallet-id>/balance \
   -H 'Authorization: Bearer <access-token>'
 ```
+
+## UI Module Layout (Migration-Ready)
+
+The web UI is still served by the monolith (`/app`) but split into frontend modules for future extraction:
+
+- `public/ui/modules/config.js` - runtime config (`apiBaseUrl`, token key)
+- `public/ui/modules/api-client.js` - API transport boundary
+- `public/ui/modules/state.js` - client state model
+- `public/ui/modules/dom.js` - DOM mapping
+- `public/ui/modules/helpers.js` - pure helper functions
+- `public/ui/modules/dashboard-app.js` - application orchestration
+- `public/ui/app.js` - thin entrypoint
+
+When extracting to a dedicated frontend service, move `public/ui/*` as-is and only adjust `apiBaseUrl` in `config.js`.

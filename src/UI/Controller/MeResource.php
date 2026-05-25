@@ -13,11 +13,9 @@ use App\UI\Provider\MeProvider;
     operations: [
         new Get(
             uriTemplate: '/me',
-            security: "is_granted('IS_AUTHENTICATED_FULLY')",
             output: ApiDataResponse::class,
             name: 'me',
             provider: MeProvider::class,
-//            security: "is_granted('ROLE_ADMIN')",
         ),
     ],
 )]

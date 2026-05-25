@@ -21,7 +21,6 @@ use App\UI\Provider\AdminUserItemProvider;
             output: ApiDataResponse::class,
             name: 'admin_users_get',
             provider: AdminUserItemProvider::class,
-            security: "is_granted('ROLE_ADMIN')",
         ),
         new Patch(
             uriTemplate: '/admin/users/{id}',
@@ -30,7 +29,6 @@ use App\UI\Provider\AdminUserItemProvider;
             read: false,
             name: 'admin_users_update',
             processor: AdminUpdateUserProcessor::class,
-            security: "is_granted('ROLE_ADMIN')",
         ),
         new Delete(
             uriTemplate: '/admin/users/{id}',
@@ -39,7 +37,6 @@ use App\UI\Provider\AdminUserItemProvider;
             read: false,
             name: 'admin_users_delete',
             processor: AdminDeleteUserProcessor::class,
-            security: "is_granted('ROLE_ADMIN')",
         ),
     ],
 )]
