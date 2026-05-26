@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Wallet | Wallet Console{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/web-app/app.css">
+{% endblock %}
+
+{% block body %}
+<main class="app-shell">
+  {% include 'web_app/_sidebar.html.twig' with { active: 'wallet' } %}
+
+  <section class="content">
+    <header class="page-head">
+      <div>
+        <h1>{{ wallet.networkName }}</h1>
+        <p class="mono">{{ wallet.address }}</p>
+      </div>
+      <a class="button button-muted" href="{{ path('app_dashboard') }}">Back</a>
+    </header>
+
+    {% include 'web_app/_flash.html.twig' %}
+
+    <section class="wallet-grid">
+      <article class="hero-widget">
+        <span>Balance</span>
+        <strong>{{ wallet.lastKnownBalanceDisplay ?: 'Not synced' }}</strong>
+        <meter min="0" max="100" value="{{ balanceRatio }}"></meter>
+      </article>
+      <article class="metric"><span>Native asset</span><strong>{{ wallet.nativeSymbol }}</strong></article>
+      <article class="metric"><span>Network id</span><strong>{{ wallet.networkId }}</strong></article>
+      <article class="metric"><span>Last sync</span><strong>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('m-d H:i') : '-' }}</strong></article>
+    </section>
+
+    <section class="panel detail-panel">
+      <div>
+        <h2>Wallet details</h2>
+        <dl class="definition-grid">
+          <div><dt>ID</dt><dd class="mono">{{ wallet.id }}</dd></div>
+          <div><dt>Address</dt><dd class="mono">{{ wallet.address }}</dd></div>
+          <div><dt>RPC endpoint</dt><dd class="mono">{{ wallet.rpcEndpoint }}</dd></div>
+          <div><dt>Created</dt><dd>{{ wallet.createdAt|date('Y-m-d H:i') }}</dd></div>
+          <div><dt>Balance wei</dt><dd class="mono">{{ wallet.lastKnownBalanceWei ?: '-' }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="chart-card">
+        <h2>Balance signal</h2>
+        <div class="bar-chart" style="--value: {{ balanceRatio }}%;">
+          <span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel actions-panel">
+      {{ form_start(walletUpdateForm, { action: path('app_wallet_update', { id: wallet.id }), attr: { class: 'stack-form compact-form' } }) }}
+        {{ form_widget(walletUpdateForm.id) }}
+        {{ form_row(walletUpdateForm.rpcEndpoint) }}
+        <button class="button button-primary" type="submit">Update RPC</button>
+      {{ form_end(walletUpdateForm) }}
+
+      <div class="danger-zone">
+        <form method="post" action="{{ path('app_wallet_sync', { id: wallet.id }) }}">
+          <input type="hidden" name="web3_wallet_action_web_form[id]" value="{{ wallet.id }}">
+          <input type="hidden" name="web3_wallet_action_web_form[_token]" value="{{ csrf_token('web_wallet_action') }}">
+          <button class="button" type="submit">Sync balance</button>
+        </form>
+        <form method="post" action="{{ path('app_wallet_delete', { id: wallet.id }) }}" onsubmit="return confirm('Delete this wallet?');">
+          <input type="hidden" name="web3_wallet_action_web_form[id]" value="{{ wallet.id }}">
+          <input type="hidden" name="web3_wallet_action_web_form[_token]" value="{{ csrf_token('web_wallet_action') }}">
+          <button class="button button-danger" type="submit">Delete wallet</button>
+        </form>
+      </div>
+    </section>
+  </section>
+</main>
+{% endblock %}

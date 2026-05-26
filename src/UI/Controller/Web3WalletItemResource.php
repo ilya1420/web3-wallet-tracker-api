@@ -32,9 +32,11 @@ use App\UI\Provider\Web3WalletItemProvider;
         ),
         new Delete(
             uriTemplate: '/web3/wallets/{id}',
-            output: ApiDataResponse::class,
-            read: false,
+            status: 204,
+            output: false,
+            deserialize: false,
             name: 'web3_wallet_item_delete',
+            provider: Web3WalletItemProvider::class,
             processor: DeleteWeb3WalletProcessor::class,
         ),
     ],

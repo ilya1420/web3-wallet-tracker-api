@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Add wallet | Wallet Console{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/web-app/app.css">
+{% endblock %}
+
+{% block body %}
+<main class="app-shell">
+  {% include 'web_app/_sidebar.html.twig' with { active: 'wallet_new' } %}
+
+  <section class="content">
+    <header class="page-head">
+      <div>
+        <h1>Add wallet</h1>
+        <p>Select a network preset and enter an EVM address.</p>
+      </div>
+    </header>
+
+    {% include 'web_app/_flash.html.twig' %}
+
+    <section class="form-layout">
+      <article class="panel">
+        {{ form_start(walletCreateForm, { action: path('app_wallet_create'), attr: { class: 'stack-form wallet-create-form' } }) }}
+          {{ form_row(walletCreateForm.address) }}
+          {{ form_row(walletCreateForm.rpcPreset) }}
+          {{ form_row(walletCreateForm.rpcEndpoint) }}
+          <div class="form-actions">
+            <button class="button button-primary" type="submit">Connect wallet</button>
+            <a class="button button-muted" href="{{ path('app_dashboard') }}">Cancel</a>
+          </div>
+        {{ form_end(walletCreateForm) }}
+      </article>
+
+      <aside class="network-list">
+        {% for preset in presets %}
+          <div class="network-row">
+            <strong>{{ preset.networkName }}</strong>
+            <span>{{ preset.nativeSymbol }} / chain {{ preset.networkId }}</span>
+          </div>
+        {% endfor %}
+      </aside>
+    </section>
+  </section>
+</main>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+(() => {
+  const presetToRpc = {
+    ethereum: 'https://ethereum-rpc.publicnode.com',
+    arbitrum: 'https://arbitrum-one-rpc.publicnode.com',
+    optimism: 'https://optimism-rpc.publicnode.com',
+    base: 'https://base-rpc.publicnode.com',
+    polygon: 'https://polygon-bor-rpc.publicnode.com',
+    bsc: 'https://bsc-rpc.publicnode.com',
+    avalanche: 'https://avalanche-c-chain-rpc.publicnode.com'
+  };
+  const preset = document.getElementById('web3_wallet_create_web_form_rpcPreset');
+  const endpoint = document.getElementById('web3_wallet_create_web_form_rpcEndpoint');
+  if (!preset || !endpoint) return;
+
+  const knownValues = Object.values(presetToRpc);
+  const sync = () => {
+    const next = presetToRpc[preset.value] || '';
+    if (!next) return;
+    const current = endpoint.value.trim();
+    if (current === '' || knownValues.includes(current)) endpoint.value = next;
+  };
+
+  preset.addEventListener('change', sync);
+  sync();
+})();
+</script>
+{% endblock %}

@@ -47,6 +47,10 @@ services:
     arguments:
       $accessTokenTtl: '%app.access_token_ttl%'
 
+  App\Application\UseCase\SignInWithPasswordUseCase:
+    arguments:
+      $accessTokenTtl: '%app.access_token_ttl%'
+
   App\Application\UseCase\CreateWeb3WalletUseCase:
     arguments:
       $defaultRpcEndpoint: '%app.web3.default_rpc_endpoint%'

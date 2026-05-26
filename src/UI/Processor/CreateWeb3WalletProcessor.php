@@ -11,6 +11,7 @@ use App\Application\DTO\CreateWeb3WalletInput;
 use App\Application\UseCase\CreateWeb3WalletUseCase;
 use App\Domain\Entity\User;
 use App\UI\Input\DtoInputResolver;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -23,6 +24,7 @@ final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
         private CreateWeb3WalletUseCase $useCase,
         private Security $security,
         private DtoInputResolver $inputResolver,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -33,9 +35,25 @@ final readonly class CreateWeb3WalletProcessor implements ProcessorInterface
 
         $user = $this->security->getUser();
         if (!$user instanceof User) {
+            $this->logger->warning('web3.wallet.create.unauthorized');
             throw new AccessDeniedException('Authentication required.');
         }
 
-        return new ApiDataResponse($this->useCase->execute($user, $input->address, $input->rpcEndpoint));
+        $this->logger->info('web3.wallet.create.requested', [
+            'userId' => $user->id()->toRfc4122(),
+            'rpcPreset' => $input->rpcPreset,
+            'hasCustomRpcEndpoint' => trim((string) $input->rpcEndpoint) !== '',
+        ]);
+
+        $output = $this->useCase->execute($user, $input->address, $input->rpcEndpoint, $input->rpcPreset);
+
+        $this->logger->info('web3.wallet.create.succeeded', [
+            'userId' => $user->id()->toRfc4122(),
+            'walletId' => $output->id,
+            'networkId' => $output->networkId,
+            'rpcEndpoint' => $output->rpcEndpoint,
+        ]);
+
+        return new ApiDataResponse($output);
     }
 }

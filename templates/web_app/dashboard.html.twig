@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard | Wallet Console{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/web-app/app.css">
+{% endblock %}
+
+{% block body %}
+<main class="app-shell">
+  {% include 'web_app/_sidebar.html.twig' with { active: 'overview' } %}
+
+  <section class="content">
+    <header class="page-head">
+      <div>
+        <h1>Overview</h1>
+        <p>{{ currentUser.email }}</p>
+      </div>
+      <a class="button button-primary" href="{{ path('app_wallet_new') }}">Add wallet</a>
+    </header>
+
+    {% include 'web_app/_flash.html.twig' %}
+
+    <section class="metric-grid">
+      <article class="metric"><span>Total wallets</span><strong>{{ summary.total }}</strong></article>
+      <article class="metric"><span>Networks</span><strong>{{ summary.networks }}</strong></article>
+      <article class="metric"><span>Synced</span><strong>{{ summary.synced }}</strong></article>
+      <article class="metric"><span>With balance</span><strong>{{ summary.withBalance }}</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Connected wallets</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Wallet</th>
+              <th>Network</th>
+              <th>Balance</th>
+              <th>Last sync</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for wallet in wallets %}
+              <tr>
+                <td><span class="mono">{{ wallet.address }}</span></td>
+                <td>{{ wallet.networkName }}</td>
+                <td><span class="pill">{{ wallet.lastKnownBalanceDisplay ?: 'Not synced' }}</span></td>
+                <td>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('Y-m-d H:i') : '-' }}</td>
+                <td><a class="button button-small" href="{{ path('app_wallet_show', { id: wallet.id }) }}">View</a></td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="empty-cell">No wallets connected yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+</main>
+{% endblock %}

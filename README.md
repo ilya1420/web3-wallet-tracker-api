@@ -26,7 +26,7 @@ Production-grade stateless REST API on Symfony + API Platform with DDD architect
 - `Application/`
 - `DTO/` API input/output models
 - `Service/` reusable application services (`TokenManager`, mappers, rate limiter)
-- `UseCase/` business scenarios (`RequestLoginLinkUseCase`, `ConfirmLoginTokenUseCase`)
+- `UseCase/` business scenarios (`RequestLoginLinkUseCase`, `ConfirmLoginTokenUseCase`, `SignInWithPasswordUseCase`)
 - `Exception/` application-level exceptions
 - `Infrastructure/`
 - `Persistence/Doctrine/Repository/` Doctrine implementations of domain repositories
@@ -122,6 +122,13 @@ RabbitMQ message body format (cross-language friendly JSON):
 - stores only hash of access token in `access_tokens`.
 3. API returns bearer token and expiry timestamp.
 
+### 3.1) Browser password sign-in
+
+1. Browser users submit `Email` + `Password` from `/app/auth`.
+2. `SignInWithPasswordUseCase` normalizes email, applies the Redis-backed login rate limit, checks that the email exists in `users`, and verifies the password hash.
+3. Failed email/password checks return the same generic error to avoid public user enumeration; structured logs keep only hashed email context.
+4. Successful sign-in updates `lastLoginAt`, issues a hashed access token, and keeps the raw token only in the Symfony web session.
+
 ### 4) Authenticated requests
 
 1. Client calls protected endpoint with `Authorization: Bearer <token>`.
@@ -139,10 +146,11 @@ RabbitMQ message body format (cross-language friendly JSON):
 
 ### 6) Web3 wallet tracking
 
-1. Authenticated user sends `POST /api/web3/wallets` with wallet address and optional RPC endpoint.
-2. Service resolves `networkId` via `web3php` (`net_version`) and stores wallet metadata in `web3_wallets`.
-3. Client calls `GET /api/web3/wallets/{id}/balance`.
-4. Service fetches on-chain balance via `web3php` (`eth_getBalance`), persists `lastKnownBalanceWei` + `lastSyncedAt`, and returns normalized wei/eth response.
+1. Authenticated user sends `POST /api/web3/wallets` with wallet address and optional `rpcPreset` (`ethereum`, `arbitrum`, `optimism`, `base`, `polygon`, `bsc`, `avalanche`) and optional custom `rpcEndpoint`.
+2. Service validates EVM address and auto-selects public RPC endpoint from preset when custom endpoint is not provided.
+3. Service resolves/stores `networkId` and wallet metadata in `web3_wallets` (custom RPC is validated against selected preset if both are provided).
+4. Client calls `GET /api/web3/wallets/{id}/balance`.
+5. Service fetches on-chain balance via `web3php` (`eth_getBalance`), persists `lastKnownBalanceWei` + `lastSyncedAt`, and returns normalized + human-readable balance fields.
 
 ## Run With Docker
 
@@ -201,7 +209,7 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 ## Service URLs
 
 - API root: `http://localhost:8080/api`
-- Cyberpunk UI: `http://localhost:8080/ui/index.html`
+- Web UI: `http://localhost:8080/app/auth`
 - App URL used in emails: `http://localhost:8080`
 - RabbitMQ UI: `http://localhost:15672` (`guest` / `guest`)
 - Mailhog UI: `http://localhost:8025`
@@ -214,7 +222,7 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 
 ## Operational Notes
 
-- API is stateless; sessions are disabled.
+- API endpoints are stateless. The demo web UI uses a dedicated Symfony session firewall backed by hashed access tokens.
 - MySQL data persists in `mysql_data` volume.
 - Redis persists in `redis_data` volume.
 - RabbitMQ data persists in `rabbitmq_data` volume.
@@ -293,13 +301,13 @@ curl -X DELETE http://localhost:8080/api/admin/users/<user-id> \
   -H 'Authorization: Bearer <admin-access-token>'
 ```
 
-Create tracked web3 wallet:
+Create tracked web3 wallet (auto RPC by preset):
 
 ```bash
 curl -X POST http://localhost:8080/api/web3/wallets \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <access-token>' \
-  -d '{"address":"0x742d35Cc6634C0532925a3b844Bc454e4438f44e","rpcEndpoint":"https://ethereum.publicnode.com"}'
+  -d '{"address":"0x742d35Cc6634C0532925a3b844Bc454e4438f44e","rpcPreset":"base"}'
 ```
 
 Refresh and read wallet balance:
@@ -309,16 +317,21 @@ curl http://localhost:8080/api/web3/wallets/<wallet-id>/balance \
   -H 'Authorization: Bearer <access-token>'
 ```
 
-## UI Module Layout (Migration-Ready)
+Delete wallet:
 
-The web UI is still served by the monolith (`/app`) but split into frontend modules for future extraction:
+```bash
+curl -X DELETE http://localhost:8080/api/web3/wallets/<wallet-id> \
+  -H 'Authorization: Bearer <access-token>'
+```
 
-- `public/ui/modules/config.js` - runtime config (`apiBaseUrl`, token key)
-- `public/ui/modules/api-client.js` - API transport boundary
-- `public/ui/modules/state.js` - client state model
-- `public/ui/modules/dom.js` - DOM mapping
-- `public/ui/modules/helpers.js` - pure helper functions
-- `public/ui/modules/dashboard-app.js` - application orchestration
-- `public/ui/app.js` - thin entrypoint
+## Web UI Layout
 
-When extracting to a dedicated frontend service, move `public/ui/*` as-is and only adjust `apiBaseUrl` in `config.js`.
+The demo UI is structurally separated from API Platform under `src/UI/Web`, `templates/web_app`, and `public/web-app`.
+It uses Twig, Symfony Form, DTO validation attributes, CSRF protection, and a dedicated session authenticator for browser access.
+
+- `/app/auth` - sign in with email/password
+- `/app/auth/register` - create account; browser device fingerprint is collected automatically and submitted as a hidden field
+- `/app/auth/confirm` - confirm token using the email stored in the web session
+- `/app` - wallet overview dashboard
+- `/app/wallets/new` - add wallet with EVM RPC preset dropdown
+- `/app/wallets/{id}` - wallet detail, balance widget, sync/update/delete actions
