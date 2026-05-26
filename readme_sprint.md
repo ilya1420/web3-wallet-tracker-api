@@ -14,6 +14,11 @@
 - Close critical security gaps in auth flow (token TTL checks, replay protection, uniform auth errors).
 - Add strict DTO validation coverage for all public auth endpoints.
 - Add structured error logging with `request_id` and `use_case`.
+- Implemented (web auth UX):
+  - Split browser sign-in and registration into separate screens (`/app/auth`, `/app/auth/register`).
+  - Replaced web sign-in token request with email/password authentication backed by DB email lookup and password hash verification.
+  - Kept public auth errors generic while logging hashed email context for investigation.
+  - Removed manual device fingerprint input from registration and auto-populate it as a hidden browser field with server fallback.
 
 ### Week 2
 
@@ -78,6 +83,11 @@
 - Add feature flags for risky rollouts (registration policy and async toggles).
 - Extend wallet functionality with safe contract evolution (non-breaking fields only).
 - Add migration policy checks for zero-downtime schema changes.
+- Implemented (web3 wallet increment):
+  - Added public EVM RPC preset enum (`ethereum`, `arbitrum`, `optimism`, `base`, `polygon`, `bsc`, `avalanche`) for safer wallet onboarding.
+  - Extended `POST /api/web3/wallets` contract with `rpcPreset` + automatic RPC selection and preset/RPC network mismatch protection.
+  - Kept wallet delete flow in active contract (`DELETE /api/web3/wallets/{id}`) and refreshed UI/README usage.
+  - Added human-readable balance fields to wallet responses for better operator UX.
 
 ### Week 10
 

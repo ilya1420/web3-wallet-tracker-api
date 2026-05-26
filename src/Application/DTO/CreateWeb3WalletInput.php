@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\DTO;
 
+use App\Domain\Enum\EvmRpcPreset;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class CreateWeb3WalletInput
@@ -15,4 +16,7 @@ final class CreateWeb3WalletInput
     #[Assert\Length(max: 255)]
     #[Assert\Url(protocols: ['http', 'https'], requireTld: false)]
     public ?string $rpcEndpoint = null;
+
+    #[Assert\Choice(callback: [EvmRpcPreset::class, 'values'], message: 'rpcPreset must be one of supported EVM presets.')]
+    public ?string $rpcPreset = null;
 }

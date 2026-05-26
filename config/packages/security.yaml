@@ -14,13 +14,31 @@ security:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
 
-    main:
+    web:
+      pattern: ^/(app|$)
+      lazy: true
+      provider: app_user_provider
+      custom_authenticators:
+        - App\Infrastructure\Security\WebSessionAccessTokenAuthenticator
+      logout:
+        path: app_web_logout
+        target: app_web_login
+        invalidate_session: true
+        enable_csrf: true
+        csrf_parameter: _token
+        csrf_token_id: web_logout
+
+    api:
+      pattern: ^/api
       stateless: true
       provider: app_user_provider
       custom_authenticators:
         - App\Infrastructure\Security\BearerTokenAuthenticator
 
   access_control:
+    - { path: ^/$, roles: PUBLIC_ACCESS }
+    - { path: ^/app/auth, roles: PUBLIC_ACCESS }
+    - { path: ^/app, roles: ROLE_USER }
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/login-links, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/request-login-link, roles: PUBLIC_ACCESS }

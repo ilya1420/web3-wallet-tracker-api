@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UI\EventSubscriber;
 
+use App\Application\Exception\InvalidCredentialsException;
 use App\Application\Exception\InvalidLoginTokenException;
 use App\Application\Exception\MultiAccountingDetectedException;
 use App\Application\Exception\RateLimitExceededException;
@@ -44,7 +45,7 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
 
         $mapped = match (true) {
             $throwable instanceof RateLimitExceededException => new TooManyRequestsHttpException(null, $throwable->getMessage(), $throwable),
-            $throwable instanceof InvalidLoginTokenException => new UnauthorizedHttpException('Bearer', $throwable->getMessage(), $throwable),
+            $throwable instanceof InvalidLoginTokenException, $throwable instanceof InvalidCredentialsException => new UnauthorizedHttpException('Bearer', $throwable->getMessage(), $throwable),
             $throwable instanceof UserAlreadyExistsException, $throwable instanceof Web3WalletAlreadyExistsException => new ConflictHttpException($throwable->getMessage(), $throwable),
             $throwable instanceof Web3WalletNotFoundException, $throwable instanceof UserNotFoundException => new NotFoundHttpException($throwable->getMessage(), $throwable),
             $throwable instanceof MultiAccountingDetectedException, $throwable instanceof DtoValidationException, $throwable instanceof \InvalidArgumentException => new UnprocessableEntityHttpException($throwable->getMessage(), $throwable),
