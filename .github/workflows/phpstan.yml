@@ -31,11 +31,15 @@ jobs:
         run: cp .env.example .env
 
       - name: Build PHP image
-        run: docker compose build php
+        run: >
+          UID=$(id -u) GID=$(id -g)
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml build php
 
       - name: Install deps, warmup cache and run PHPStan
         run: >
-          docker compose run --rm php sh -lc
-          "composer install --no-interaction --prefer-dist &&
+          UID=$(id -u) GID=$(id -g)
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm php sh -lc
+          "git config --global --add safe.directory /var/www/html &&
+          composer install --no-interaction --prefer-dist &&
           php bin/console cache:warmup &&
           php -d memory_limit=1G vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress"
