@@ -32,18 +32,19 @@ final class Web3WalletCreateWebFormType extends AbstractType
 
         $builder
             ->add('address', TextType::class, [
-                'label' => 'Wallet address',
-                'attr' => ['placeholder' => '0x...', 'maxlength' => 42, 'spellcheck' => 'false', 'inputmode' => 'text'],
+                'label' => 'form.wallet.address.label',
+                'attr' => ['placeholder' => 'form.wallet.address.placeholder', 'maxlength' => 42, 'spellcheck' => 'false', 'inputmode' => 'text'],
             ])
             ->add('rpcPreset', ChoiceType::class, [
-                'label' => 'Network',
+                'label' => 'form.wallet.network.label',
                 'choices' => $choices,
                 'placeholder' => false,
+                'choice_translation_domain' => false,
             ])
             ->add('rpcEndpoint', UrlType::class, [
-                'label' => 'RPC endpoint',
+                'label' => 'form.wallet.rpc_endpoint.label',
                 'required' => false,
-                'attr' => ['placeholder' => 'Optional override: https://rpc.example'],
+                'attr' => ['placeholder' => 'form.wallet.rpc_endpoint.placeholder'],
             ]);
     }
 
@@ -53,6 +54,7 @@ final class Web3WalletCreateWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_wallet_create',
             'data_class' => Web3WalletCreateWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

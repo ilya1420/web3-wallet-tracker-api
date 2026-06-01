@@ -1,0 +1,2 @@
+validation.password.complexity: 'Password must include upper, lower, digit and special character.'
+validation.wallet.address.evm: 'Address must be a valid EVM address.'

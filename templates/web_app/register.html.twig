@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Create account | Wallet Console{% endblock %}
+{% block title %}{{ 'auth.register.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -70,14 +71,14 @@
   <section class="auth-panel narrow">
     <div class="brand-block">
       <span class="brand-mark">WC</span>
-      <h1>Create account</h1>
-      <p>Wallet Console account access for the demo workspace.</p>
+      <h1>{{ 'auth.register.heading'|trans }}</h1>
+      <p>{{ 'auth.register.subtitle'|trans }}</p>
     </div>
 
     {% include 'web_app/_flash.html.twig' %}
 
     <section class="surface">
-      <h2>Registration</h2>
+      <h2>{{ 'auth.register.form_heading'|trans }}</h2>
       {{ form_start(registerForm, { action: path('app_web_register'), attr: { class: 'stack-form' } }) }}
         {{ form_row(registerForm.email) }}
         <div class="form-row">
@@ -95,12 +96,12 @@
         </div>
         {{ form_widget(registerForm.deviceFingerprint) }}
         {{ form_errors(registerForm.deviceFingerprint) }}
-        <button class="button button-primary" type="submit">Create account</button>
+        <button class="button button-primary" type="submit">{{ 'auth.register.submit'|trans }}</button>
       {{ form_end(registerForm) }}
 
       <div class="auth-switch">
-        <span>Already registered?</span>
-        <a class="button button-muted" href="{{ path('app_web_login') }}">Sign in</a>
+        <span>{{ 'auth.register.already_registered'|trans }}</span>
+        <a class="button button-muted" href="{{ path('app_web_login') }}">{{ 'auth.register.sign_in'|trans }}</a>
       </div>
     </section>
   </section>

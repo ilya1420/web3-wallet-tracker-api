@@ -24,12 +24,12 @@ final class RegisterWebFormType extends AbstractType
 
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
-                'attr' => ['autocomplete' => 'email', 'placeholder' => 'you@company.com', 'inputmode' => 'email'],
+                'label' => 'form.email.label',
+                'attr' => ['autocomplete' => 'email', 'placeholder' => 'form.email.placeholder', 'inputmode' => 'email'],
             ])
             ->add('password', PasswordType::class, [
-                'label' => 'Password',
-                'attr' => ['autocomplete' => 'new-password', 'minlength' => 8, 'placeholder' => 'StrongPass123!'],
+                'label' => 'form.password.label',
+                'attr' => ['autocomplete' => 'new-password', 'minlength' => 8, 'placeholder' => 'form.password.register_placeholder'],
             ])
             ->add('deviceFingerprint', HiddenType::class, [
                 'attr' => ['data-device-fingerprint' => 'registration'],
@@ -42,6 +42,7 @@ final class RegisterWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_register',
             'data_class' => RegisterWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

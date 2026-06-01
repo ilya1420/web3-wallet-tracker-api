@@ -21,8 +21,8 @@ final class ConfirmTokenWebFormType extends AbstractType
         $builder->addEventSubscriber(new TrimSubmittedStringsSubscriber());
 
         $builder->add('token', TextType::class, [
-            'label' => 'Confirmation token',
-            'attr' => ['autocomplete' => 'one-time-code', 'placeholder' => 'paste token from email'],
+            'label' => 'form.confirm_token.label',
+            'attr' => ['autocomplete' => 'one-time-code', 'placeholder' => 'form.confirm_token.placeholder'],
         ]);
     }
 
@@ -32,6 +32,7 @@ final class ConfirmTokenWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_confirm_token',
             'data_class' => ConfirmTokenWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Dashboard | Wallet Console{% endblock %}
+{% block title %}{{ 'dashboard.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -13,33 +14,33 @@
   <section class="content">
     <header class="page-head">
       <div>
-        <h1>Overview</h1>
+        <h1>{{ 'dashboard.overview'|trans }}</h1>
         <p>{{ currentUser.email }}</p>
       </div>
-      <a class="button button-primary" href="{{ path('app_wallet_new') }}">Add wallet</a>
+      <a class="button button-primary" href="{{ path('app_wallet_new') }}">{{ 'wallet.add'|trans }}</a>
     </header>
 
     {% include 'web_app/_flash.html.twig' %}
 
     <section class="metric-grid">
-      <article class="metric"><span>Total wallets</span><strong>{{ summary.total }}</strong></article>
-      <article class="metric"><span>Networks</span><strong>{{ summary.networks }}</strong></article>
-      <article class="metric"><span>Synced</span><strong>{{ summary.synced }}</strong></article>
-      <article class="metric"><span>With balance</span><strong>{{ summary.withBalance }}</strong></article>
+      <article class="metric"><span>{{ 'dashboard.metric.total_wallets'|trans }}</span><strong>{{ summary.total }}</strong></article>
+      <article class="metric"><span>{{ 'dashboard.metric.networks'|trans }}</span><strong>{{ summary.networks }}</strong></article>
+      <article class="metric"><span>{{ 'dashboard.metric.synced'|trans }}</span><strong>{{ summary.synced }}</strong></article>
+      <article class="metric"><span>{{ 'dashboard.metric.with_balance'|trans }}</span><strong>{{ summary.withBalance }}</strong></article>
     </section>
 
     <section class="panel">
       <div class="panel-head">
-        <h2>Connected wallets</h2>
+        <h2>{{ 'dashboard.connected_wallets'|trans }}</h2>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Wallet</th>
-              <th>Network</th>
-              <th>Balance</th>
-              <th>Last sync</th>
+              <th>{{ 'wallet.table.wallet'|trans }}</th>
+              <th>{{ 'wallet.table.network'|trans }}</th>
+              <th>{{ 'wallet.table.balance'|trans }}</th>
+              <th>{{ 'wallet.table.last_sync'|trans }}</th>
               <th></th>
             </tr>
           </thead>
@@ -48,12 +49,12 @@
               <tr>
                 <td><span class="mono">{{ wallet.address }}</span></td>
                 <td>{{ wallet.networkName }}</td>
-                <td><span class="pill">{{ wallet.lastKnownBalanceDisplay ?: 'Not synced' }}</span></td>
+                <td><span class="pill">{{ wallet.lastKnownBalanceDisplay ?: 'wallet.not_synced'|trans }}</span></td>
                 <td>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('Y-m-d H:i') : '-' }}</td>
-                <td><a class="button button-small" href="{{ path('app_wallet_show', { id: wallet.id }) }}">View</a></td>
+                <td><a class="button button-small" href="{{ path('app_wallet_show', { id: wallet.id }) }}">{{ 'common.view'|trans }}</a></td>
               </tr>
             {% else %}
-              <tr><td colspan="5" class="empty-cell">No wallets connected yet.</td></tr>
+              <tr><td colspan="5" class="empty-cell">{{ 'dashboard.no_wallets'|trans }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

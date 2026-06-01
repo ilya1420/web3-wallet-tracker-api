@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Doctrine\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 final readonly class RegistrationIpCounterRepository
 {
@@ -32,6 +33,60 @@ final readonly class RegistrationIpCounterRepository
     }
 
     public function reserveSlot(string $ipHash, \DateTimeImmutable $date, int $limit): bool
+    {
+        if ($limit <= 0) {
+            return false;
+        }
+
+        if ($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            return $this->reserveSlotPostgreSql($ipHash, $date, $limit);
+        }
+
+        return $this->reserveSlotMySql($ipHash, $date, $limit);
+    }
+
+    public function releaseSlot(string $ipHash, \DateTimeImmutable $date): void
+    {
+        if ($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            $this->releaseSlotPostgreSql($ipHash, $date);
+
+            return;
+        }
+
+        $this->releaseSlotMySql($ipHash, $date);
+    }
+
+    private function reserveSlotPostgreSql(string $ipHash, \DateTimeImmutable $date, int $limit): bool
+    {
+        $reservedCount = $this->connection->fetchOne(
+            <<<'SQL'
+                INSERT INTO registration_ip_counters (
+                    registration_ip_hash,
+                    counter_date,
+                    registrations_count,
+                    created_at,
+                    updated_at
+                )
+                VALUES (:ipHash, :counterDate, 1, :now, :now)
+                ON CONFLICT (registration_ip_hash, counter_date)
+                DO UPDATE SET
+                    registrations_count = registration_ip_counters.registrations_count + 1,
+                    updated_at = EXCLUDED.updated_at
+                WHERE registration_ip_counters.registrations_count < :limit
+                RETURNING registrations_count
+            SQL,
+            [
+                'ipHash' => $ipHash,
+                'counterDate' => $date->format('Y-m-d'),
+                'now' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+                'limit' => $limit,
+            ],
+        );
+
+        return $reservedCount !== false;
+    }
+
+    private function reserveSlotMySql(string $ipHash, \DateTimeImmutable $date, int $limit): bool
     {
         $counterDate = $date->format('Y-m-d');
         $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
@@ -73,7 +128,34 @@ final readonly class RegistrationIpCounterRepository
         return true;
     }
 
-    public function releaseSlot(string $ipHash, \DateTimeImmutable $date): void
+    private function releaseSlotPostgreSql(string $ipHash, \DateTimeImmutable $date): void
+    {
+        $this->connection->executeStatement(
+            <<<'SQL'
+                WITH decremented AS (
+                    UPDATE registration_ip_counters
+                    SET registrations_count = registrations_count - 1,
+                        updated_at = :now
+                    WHERE registration_ip_hash = :ipHash
+                      AND counter_date = :counterDate
+                      AND registrations_count > 1
+                    RETURNING 1
+                )
+                DELETE FROM registration_ip_counters
+                WHERE registration_ip_hash = :ipHash
+                  AND counter_date = :counterDate
+                  AND registrations_count <= 1
+                  AND NOT EXISTS (SELECT 1 FROM decremented)
+            SQL,
+            [
+                'ipHash' => $ipHash,
+                'counterDate' => $date->format('Y-m-d'),
+                'now' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            ],
+        );
+    }
+
+    private function releaseSlotMySql(string $ipHash, \DateTimeImmutable $date): void
     {
         $counterDate = $date->format('Y-m-d');
         $current = $this->lockCurrentCount($ipHash, $counterDate);

@@ -88,6 +88,11 @@
   - Extended `POST /api/web3/wallets` contract with `rpcPreset` + automatic RPC selection and preset/RPC network mismatch protection.
   - Kept wallet delete flow in active contract (`DELETE /api/web3/wallets/{id}`) and refreshed UI/README usage.
   - Added human-readable balance fields to wallet responses for better operator UX.
+- Started PostgreSQL transition:
+  - Switched local Docker/PHP/Doctrine runtime from MySQL to PostgreSQL 18.
+  - Added PostgreSQL baseline migration while keeping legacy MySQL migrations no-op on PostgreSQL.
+  - Reworked outbox claim and registration IP counter SQL for PostgreSQL concurrency semantics.
+  - Documented cutover constraints; production data migration remains a Sprint 6 release-readiness task.
 
 ### Week 10
 
@@ -104,6 +109,7 @@
 - Add alerts for security and reliability incidents (brute-force anomalies, elevated 401/429, DLQ size).
 - Add correlation between API errors and async failures via shared identifiers.
 - Validate disaster recovery procedures for DB/Redis/RabbitMQ in staging.
+- Execute PostgreSQL staging cutover rehearsal with row-count validation, auth smoke checks, queue lag monitoring, and rollback decision points.
 
 ### Week 12
 

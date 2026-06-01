@@ -23,12 +23,12 @@ final class LoginPasswordWebFormType extends AbstractType
 
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
-                'attr' => ['autocomplete' => 'email', 'placeholder' => 'you@company.com', 'inputmode' => 'email'],
+                'label' => 'form.email.label',
+                'attr' => ['autocomplete' => 'email', 'placeholder' => 'form.email.placeholder', 'inputmode' => 'email'],
             ])
             ->add('password', PasswordType::class, [
-                'label' => 'Password',
-                'attr' => ['autocomplete' => 'current-password', 'placeholder' => 'Your password'],
+                'label' => 'form.password.label',
+                'attr' => ['autocomplete' => 'current-password', 'placeholder' => 'form.password.placeholder'],
             ]);
     }
 
@@ -38,6 +38,7 @@ final class LoginPasswordWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_password_login',
             'data_class' => LoginPasswordWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

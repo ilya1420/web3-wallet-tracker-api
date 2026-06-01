@@ -19,7 +19,7 @@
 
 - `php` исполняет Symfony приложение и CLI-команды.
 - `nginx` принимает HTTP-трафик и проксирует PHP-запросы в `php-fpm`.
-- `mysql` хранит пользователей, login tokens, access tokens и registration context.
+- `postgres` хранит пользователей, login tokens, access tokens, registration context, outbox и web3 wallet state.
 - `redis` используется как backend для `cache.app` и rate limiter.
 - `rabbitmq` принимает async-сообщения на отправку email.
 - `mailhog` принимает SMTP-письма для локальной проверки.
@@ -37,7 +37,7 @@
 
 Поведение приложения задается через `.env`:
 
-- `DATABASE_URL` подключает MySQL.
+- `DATABASE_URL` подключает PostgreSQL.
 - `REDIS_URL` подключает Redis как единый backend для cache и limiter.
 - `MESSENGER_TRANSPORT_DSN` указывает AMQP transport.
 - `MAILER_DSN` направляет письма в Mailhog.
@@ -139,7 +139,7 @@ DTO используются на входе и выходе API вместо п
 
 - уникальность device fingerprint
 - дневной лимит регистраций с IP
-- синхронизацию registration context между MySQL и Redis
+- синхронизацию registration context между PostgreSQL и Redis-backed policy state
 
 `UserOutputMapper` преобразует доменные сущности в публичные output DTO.
 
@@ -206,7 +206,7 @@ Write-side выполняется через processors, read-side через pr
 5. `MultiAccountGuardService::assertCanRegister()` проверяет:
    - занят ли device fingerprint в Redis
    - не превышен ли лимит регистраций с IP за сутки
-6. В транзакции MySQL:
+6. В транзакции PostgreSQL:
    - создается `User`
    - пароль хешируется через argon2id
    - создается `LoginToken`
@@ -227,7 +227,7 @@ Registration context и Redis синхронизация выполняются 
 
 Здесь есть консистентностный разрыв:
 
-- пользователь уже создан в MySQL
+- пользователь уже создан в PostgreSQL
 - но обновление registration context или Redis может не выполниться
 
 Следствие: система может частично зарегистрировать пользователя без полной anti-abuse фиксации. Для high-load и anti-fraud сценариев это слабое место.
@@ -292,7 +292,7 @@ Email отправляется асинхронно, поэтому HTTP latency
 3. Use case:
    - нормализует email
    - вычисляет SHA-256 hash токена
-4. В транзакции MySQL:
+4. В транзакции PostgreSQL:
    - ищет пользователя по email
    - атомарно consume'ит login token через `UPDATE ... WHERE used_at IS NULL AND expires_at > :now`
    - обновляет `lastLoginAt`
@@ -319,7 +319,7 @@ Email отправляется асинхронно, поэтому HTTP latency
 1. Клиент отправляет `Authorization: Bearer <token>`.
 2. `BearerTokenAuthenticator` проверяет наличие заголовка и извлекает raw token.
 3. `TokenManager` вычисляет hash.
-4. `AccessTokenRepository::findValidByHash()` ищет токен в MySQL.
+4. `AccessTokenRepository::findValidByHash()` ищет токен в PostgreSQL.
 5. Если токен существует и не истек, в security context помещается связанный `User`.
 6. Дальше выполняется provider или processor endpoint'а.
 
@@ -329,7 +329,7 @@ Email отправляется асинхронно, поэтому HTTP latency
 
 ### Узкие места
 
-- Каждая аутентифицированная операция бьет в MySQL для lookup access token. Под высокой нагрузкой это будет один из главных hot path.
+- Каждая аутентифицированная операция бьет в PostgreSQL для lookup access token. Под высокой нагрузкой это будет один из главных hot path.
 - Access token не кэшируется в Redis, хотя Redis уже есть в системе.
 - `findValidByHash()` сначала находит запись, а истечение проверяет в PHP, а не целиком в SQL. Это не критично, но часть фильтрации вынесена из БД.
 
@@ -339,7 +339,7 @@ Email отправляется асинхронно, поэтому HTTP latency
 
 `GET /api/admin/users` и `GET /api/admin/users/{id}` работают через providers. Они:
 
-- читают пользователей из MySQL
+- читают пользователей из PostgreSQL
 - для каждого пользователя подтягивают `UserRegistrationContext`
 - маппят результат в admin DTO
 
@@ -355,9 +355,9 @@ Email отправляется асинхронно, поэтому HTTP latency
 
 ## 15. Хранение данных и их роли
 
-### MySQL
+### PostgreSQL
 
-MySQL хранит системно значимые и долговременные данные:
+PostgreSQL хранит системно значимые и долговременные данные:
 
 - `users`
 - `login_tokens`
@@ -401,9 +401,9 @@ Mailhog исключительно dev-инструмент. В production эт�
 
 ## 17. Основные узкие места и риски
 
-### 1. MySQL как hot path для auth
+### 1. PostgreSQL как hot path для auth
 
-Каждый `confirm-token`, `me` и любой защищенный endpoint завязан на lookup токенов и пользователей в MySQL. При масштабировании это будет одна из первых точек давления.
+Каждый `confirm-token`, `me` и любой защищенный endpoint завязан на lookup токенов и пользователей в PostgreSQL. При масштабировании это будет одна из первых точек давления.
 
 Что можно улучшить:
 
@@ -420,9 +420,9 @@ Mailhog исключительно dev-инструмент. В production эт�
 - cron или scheduled command на удаление истекших токенов
 - партиционирование или архивирование для long-lived production
 
-### 3. Разрыв консистентности между MySQL и Redis
+### 3. Разрыв консистентности между PostgreSQL и Redis
 
-Регистрация сначала фиксируется в MySQL, а затем anti-abuse контекст раскладывается по MySQL auxiliary table и Redis.
+Регистрация сначала фиксируется в PostgreSQL, а затем anti-abuse контекст раскладывается по PostgreSQL auxiliary table и Redis.
 
 Риск:
 
@@ -495,4 +495,4 @@ Mailhog исключительно dev-инструмент. В production эт�
 4. read-model для admin API
 5. более строгая консистентность anti-abuse данных
 
-Текущая архитектура уже достаточно зрелая, чтобы развиваться без полного переписывания. Основные ограничения сейчас не в структуре слоев, а в операционных деталях масштабирования и в нескольких узких runtime-точках вокруг MySQL, Redis и очереди.
+Текущая архитектура уже достаточно зрелая, чтобы развиваться без полного переписывания. Основные ограничения сейчас не в структуре слоев, а в операционных деталях масштабирования и в нескольких узких runtime-точках вокруг PostgreSQL, Redis и очереди.

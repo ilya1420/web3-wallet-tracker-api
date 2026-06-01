@@ -1,11 +1,16 @@
+{% trans_default_domain 'messages' %}
 <aside class="sidebar">
-  <a class="brand" href="{{ path('app_dashboard') }}"><span class="brand-mark">WC</span><span>Wallet Console</span></a>
+  <a class="brand" href="{{ path('app_dashboard') }}"><span class="brand-mark">WC</span><span>{{ 'brand.wallet_console'|trans }}</span></a>
   <nav class="nav-list">
-    <a class="{{ active == 'overview' ? 'is-active' : '' }}" href="{{ path('app_dashboard') }}">Overview</a>
-    <a class="{{ active == 'wallet_new' ? 'is-active' : '' }}" href="{{ path('app_wallet_new') }}">Add wallet</a>
+    <a class="{{ active == 'overview' ? 'is-active' : '' }}" href="{{ path('app_dashboard') }}">{{ 'dashboard.overview'|trans }}</a>
+    <a class="{{ active == 'wallet_new' ? 'is-active' : '' }}" href="{{ path('app_wallet_new') }}">{{ 'wallet.add'|trans }}</a>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <a href="{{ app.request.pathInfo }}?_locale=en">EN</a>
+      <a href="{{ app.request.pathInfo }}?_locale=ru">RU</a>
+    </div>
   </nav>
   <form method="post" action="{{ path('app_web_logout') }}">
     <input type="hidden" name="_token" value="{{ csrf_token('web_logout') }}">
-    <button class="button button-muted full" type="submit">Sign out</button>
+    <button class="button button-muted full" type="submit">{{ 'auth.sign_out'|trans }}</button>
   </form>
 </aside>
