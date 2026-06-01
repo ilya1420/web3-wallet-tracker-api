@@ -21,8 +21,8 @@ final class LoginLinkWebFormType extends AbstractType
         $builder->addEventSubscriber(new TrimSubmittedStringsSubscriber());
 
         $builder->add('email', EmailType::class, [
-            'label' => 'Email',
-            'attr' => ['autocomplete' => 'email', 'placeholder' => 'you@company.com', 'inputmode' => 'email'],
+            'label' => 'form.email.label',
+            'attr' => ['autocomplete' => 'email', 'placeholder' => 'form.email.placeholder', 'inputmode' => 'email'],
         ]);
     }
 
@@ -32,6 +32,7 @@ final class LoginLinkWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_login_link',
             'data_class' => LoginLinkWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

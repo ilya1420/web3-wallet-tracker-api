@@ -9,8 +9,10 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'access_tokens')]
-#[ORM\Index(name: 'idx_access_token_hash', columns: ['token_hash'])]
+#[ORM\UniqueConstraint(name: 'uniq_access_token_hash', columns: ['token_hash'])]
+#[ORM\Index(name: 'idx_access_token_user', columns: ['user_id'])]
 #[ORM\Index(name: 'idx_access_token_expires_at', columns: ['expires_at'])]
+#[ORM\Index(name: 'idx_access_token_user_expires_at', columns: ['user_id', 'expires_at'])]
 class AccessToken
 {
     #[ORM\Id]
@@ -21,7 +23,7 @@ class AccessToken
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\Column(type: 'string', length: 64, unique: true)]
+    #[ORM\Column(type: 'string', length: 64)]
     private string $tokenHash;
 
     #[ORM\Column(type: 'datetime_immutable')]

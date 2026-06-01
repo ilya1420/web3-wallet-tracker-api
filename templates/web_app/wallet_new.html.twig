@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Add wallet | Wallet Console{% endblock %}
+{% block title %}{{ 'wallet.new.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -13,8 +14,8 @@
   <section class="content">
     <header class="page-head">
       <div>
-        <h1>Add wallet</h1>
-        <p>Select a network preset and enter an EVM address.</p>
+        <h1>{{ 'wallet.new.heading'|trans }}</h1>
+        <p>{{ 'wallet.new.subtitle'|trans }}</p>
       </div>
     </header>
 
@@ -27,8 +28,8 @@
           {{ form_row(walletCreateForm.rpcPreset) }}
           {{ form_row(walletCreateForm.rpcEndpoint) }}
           <div class="form-actions">
-            <button class="button button-primary" type="submit">Connect wallet</button>
-            <a class="button button-muted" href="{{ path('app_dashboard') }}">Cancel</a>
+            <button class="button button-primary" type="submit">{{ 'wallet.new.connect'|trans }}</button>
+            <a class="button button-muted" href="{{ path('app_dashboard') }}">{{ 'common.cancel'|trans }}</a>
           </div>
         {{ form_end(walletCreateForm) }}
       </article>
@@ -37,7 +38,7 @@
         {% for preset in presets %}
           <div class="network-row">
             <strong>{{ preset.networkName }}</strong>
-            <span>{{ preset.nativeSymbol }} / chain {{ preset.networkId }}</span>
+            <span>{{ 'wallet.chain'|trans({'%symbol%': preset.nativeSymbol, '%chainId%': preset.networkId}) }}</span>
           </div>
         {% endfor %}
       </aside>
@@ -47,31 +48,38 @@
 {% endblock %}
 
 {% block javascripts %}
-<script>
-(() => {
-  const presetToRpc = {
-    ethereum: 'https://ethereum-rpc.publicnode.com',
-    arbitrum: 'https://arbitrum-one-rpc.publicnode.com',
-    optimism: 'https://optimism-rpc.publicnode.com',
-    base: 'https://base-rpc.publicnode.com',
-    polygon: 'https://polygon-bor-rpc.publicnode.com',
-    bsc: 'https://bsc-rpc.publicnode.com',
-    avalanche: 'https://avalanche-c-chain-rpc.publicnode.com'
-  };
-  const preset = document.getElementById('web3_wallet_create_web_form_rpcPreset');
-  const endpoint = document.getElementById('web3_wallet_create_web_form_rpcEndpoint');
-  if (!preset || !endpoint) return;
+    <script>
+        (() => {
+            const presetToRpc = {
+            {% for preset in presets %}
+            {{ preset.value|json_encode|raw }}: {{ preset.endpoint()|json_encode|raw }}{{ not loop.last ? ',' : '' }}
+            {% endfor %}
+        };
+            const preset = document.getElementById({{ walletCreateForm.rpcPreset.vars.id|json_encode|raw }});
+            const endpoint = document.getElementById({{ walletCreateForm.rpcEndpoint.vars.id|json_encode|raw }});
 
-  const knownValues = Object.values(presetToRpc);
-  const sync = () => {
-    const next = presetToRpc[preset.value] || '';
-    if (!next) return;
-    const current = endpoint.value.trim();
-    if (current === '' || knownValues.includes(current)) endpoint.value = next;
-  };
+            if (!preset || !endpoint) {
+                return;
+            }
 
-  preset.addEventListener('change', sync);
-  sync();
-})();
-</script>
+            const knownValues = Object.values(presetToRpc);
+
+            const sync = () => {
+                const next = presetToRpc[preset.value] || '';
+
+                if (!next) {
+                    return;
+                }
+
+                const current = endpoint.value.trim();
+
+                if (current === '' || knownValues.includes(current)) {
+                    endpoint.value = next;
+                }
+            };
+
+            preset.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
 {% endblock %}

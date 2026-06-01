@@ -1,0 +1,122 @@
+page:
+  title:
+    default: 'Добро пожаловать!'
+
+brand:
+  wallet_console: 'Wallet Console'
+
+common:
+  view: 'Открыть'
+  cancel: 'Отмена'
+  back: 'Назад'
+
+auth:
+  sign_out: 'Выйти'
+  sign_in:
+    title: 'Вход | Wallet Console'
+    subtitle: 'Доступ к аккаунту и мониторинг EVM-кошельков для демо-окружения.'
+    heading: 'Вход'
+    submit: 'Войти'
+    new_workspace: 'Новый workspace?'
+    create_account: 'Создать аккаунт'
+  register:
+    title: 'Регистрация | Wallet Console'
+    heading: 'Создать аккаунт'
+    subtitle: 'Доступ к аккаунту Wallet Console для демо-окружения.'
+    form_heading: 'Регистрация'
+    submit: 'Создать аккаунт'
+    already_registered: 'Уже зарегистрированы?'
+    sign_in: 'Войти'
+  confirm:
+    title: 'Подтверждение токена | Wallet Console'
+    heading: 'Подтверждение токена'
+    submit: 'Войти в консоль'
+
+dashboard:
+  title: 'Дашборд | Wallet Console'
+  overview: 'Обзор'
+  connected_wallets: 'Подключенные кошельки'
+  no_wallets: 'Подключенных кошельков пока нет.'
+  metric:
+    total_wallets: 'Всего кошельков'
+    networks: 'Сети'
+    synced: 'Синхронизировано'
+    with_balance: 'С балансом'
+
+wallet:
+  add: 'Добавить кошелек'
+  new:
+    title: 'Добавить кошелек | Wallet Console'
+    heading: 'Добавить кошелек'
+    subtitle: 'Выберите пресет сети и укажите EVM-адрес.'
+    connect: 'Подключить кошелек'
+  show:
+    title: 'Кошелек | Wallet Console'
+  table:
+    wallet: 'Кошелек'
+    network: 'Сеть'
+    balance: 'Баланс'
+    last_sync: 'Последняя синхронизация'
+  chain: '%symbol% / chain %chainId%'
+  not_synced: 'Не синхронизировано'
+  balance: 'Баланс'
+  native_asset: 'Нативный актив'
+  network_id: 'ID сети'
+  last_sync: 'Последняя синхронизация'
+  details: 'Детали кошелька'
+  id: 'ID'
+  address: 'Адрес'
+  rpc_endpoint: 'RPC endpoint'
+  created: 'Создан'
+  balance_wei: 'Баланс wei'
+  balance_signal: 'Сигнал баланса'
+  update_rpc: 'Обновить RPC'
+  sync_balance: 'Синхронизировать баланс'
+  delete_confirm: 'Удалить этот кошелек?'
+  delete: 'Удалить кошелек'
+
+form:
+  email:
+    label: 'Email'
+    placeholder: 'you@company.com'
+  password:
+    label: 'Пароль'
+    placeholder: 'Ваш пароль'
+    register_placeholder: 'StrongPass123!'
+  confirm_token:
+    label: 'Токен подтверждения'
+    placeholder: 'вставьте токен из email'
+  wallet:
+    address:
+      label: 'Адрес кошелька'
+      placeholder: '0x...'
+    network:
+      label: 'Сеть'
+    rpc_endpoint:
+      label: 'RPC endpoint'
+      placeholder: 'Необязательно: https://rpc.example'
+      update_placeholder: 'https://new-rpc.example'
+
+email:
+  login_token:
+    title: 'Ваш токен входа'
+    badge: 'Безопасный доступ к API'
+    heading: 'Ваш одноразовый токен входа'
+    intro: 'Запрос на вход без пароля получен для <strong>%email%</strong>. Используйте токен ниже для подтверждения и получения bearer-токена.'
+    one_time_token: 'Одноразовый токен'
+    usage: 'Как использовать'
+    usage_text: 'Отправьте <strong>POST</strong>-запрос на endpoint подтверждения в течение <strong>%expiresIn%</strong>.'
+    request_payload: 'Тело запроса'
+    quick_notes: 'Коротко'
+    notes:
+      one_time: 'Этот токен можно использовать только один раз.'
+      after_confirmation: 'После подтверждения API вернет bearer-токен для аутентифицированных запросов.'
+      ignore: 'Если вы не запрашивали доступ, просто проигнорируйте это письмо.'
+    api_root: 'Корень API'
+
+validation:
+  password:
+    complexity: 'Пароль должен содержать строчные и заглавные буквы, цифру и спецсимвол.'
+  wallet:
+    address:
+      evm: 'Адрес должен быть корректным EVM-адресом.'

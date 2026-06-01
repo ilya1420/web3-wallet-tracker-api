@@ -24,8 +24,8 @@ final class Web3WalletUpdateWebFormType extends AbstractType
         $builder
             ->add('id', HiddenType::class)
             ->add('rpcEndpoint', UrlType::class, [
-                'label' => 'RPC endpoint',
-                'attr' => ['placeholder' => 'https://new-rpc.example'],
+                'label' => 'form.wallet.rpc_endpoint.label',
+                'attr' => ['placeholder' => 'form.wallet.rpc_endpoint.update_placeholder'],
             ]);
     }
 
@@ -35,6 +35,7 @@ final class Web3WalletUpdateWebFormType extends AbstractType
             'csrf_protection' => true,
             'csrf_token_id' => 'web_wallet_update',
             'data_class' => Web3WalletUpdateWebInput::class,
+            'translation_domain' => 'messages',
         ]);
     }
 }

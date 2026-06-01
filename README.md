@@ -1,13 +1,13 @@
 # Symfony DDD High-Load REST API
 
-Production-grade stateless REST API on Symfony + API Platform with DDD architecture, MySQL, Redis, RabbitMQ, Mailhog, Docker Compose, Doctrine Migrations, and Fixtures.
+Production-grade stateless REST API on Symfony + API Platform with DDD architecture, PostgreSQL, Redis, RabbitMQ, Mailhog, Docker Compose, Doctrine Migrations, and Fixtures.
 
 ## Stack
 
 - PHP 8.3+
 - Symfony 7.3
 - API Platform 3 (REST)
-- MySQL 8.4
+- PostgreSQL 18
 - Redis 7
 - RabbitMQ 3 (management UI)
 - Mailhog
@@ -213,6 +213,7 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 - App URL used in emails: `http://localhost:8080`
 - RabbitMQ UI: `http://localhost:15672` (`guest` / `guest`)
 - Mailhog UI: `http://localhost:8025`
+- PostgreSQL: `localhost:54320` (`app` / `app_password`, database `app`)
 
 ## Admin Fixture Credentials
 
@@ -223,7 +224,7 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 ## Operational Notes
 
 - API endpoints are stateless. The demo web UI uses a dedicated Symfony session firewall backed by hashed access tokens.
-- MySQL data persists in `mysql_data` volume.
+- PostgreSQL data persists in `postgres_data` volume.
 - Redis persists in `redis_data` volume.
 - RabbitMQ data persists in `rabbitmq_data` volume.
 - Token security model: store only SHA-256 token hashes in DB.
@@ -235,6 +236,34 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 - Error responses are unified JSON: `{"message":"<text>"}` with proper HTTP status code.
 - API errors are logged by Monolog and visible in container logs.
 - Messenger transport serializer uses JSON contract without PHP envelope/stamps/class names.
+
+## PostgreSQL Migration Notes
+
+The active local runtime uses PostgreSQL 18. Historical MySQL migrations are guarded so they are no-ops on PostgreSQL, and `Version20260601120000` creates the PostgreSQL baseline schema for a fresh database.
+
+PostgreSQL 18 includes native `uuidv7()` support. The application still generates UUIDv7 identifiers in PHP through `Symfony\Component\Uid\Uuid::v7()`, while PostgreSQL 18 keeps DB-side UUIDv7 generation available for future defaults or bulk SQL flows.
+
+The official PostgreSQL 18 Docker image uses version-specific `PGDATA` at `/var/lib/postgresql/18/docker`; the Compose volume is therefore mounted at `/var/lib/postgresql`.
+
+Recommended local reset flow during the transition:
+
+```bash
+docker compose down
+docker volume rm symfony_postgres_data
+docker compose up -d --build
+docker compose exec php composer install
+docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec php php bin/console doctrine:fixtures:load --no-interaction
+```
+
+Production data cutover is not automated in this increment. Required release sequence:
+
+1. Take an encrypted MySQL backup and record row counts per table.
+2. Freeze writes or enable a tested sync path before export.
+3. Convert MySQL `BINARY(16)` UUID values to RFC4122 UUID strings for PostgreSQL `uuid` columns.
+4. Import into PostgreSQL, then compare row counts and auth/wallet smoke checks.
+5. Switch `DATABASE_URL`, monitor auth success/fail, PostgreSQL locks/connections, slow queries, and outbox lag.
+6. Roll back only before PostgreSQL accepts new writes unless reverse sync has been implemented.
 
 ## Manual API Examples
 

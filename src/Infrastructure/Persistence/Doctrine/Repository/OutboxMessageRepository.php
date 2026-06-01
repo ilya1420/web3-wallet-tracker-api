@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Doctrine\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class OutboxMessageRepository
@@ -32,6 +33,64 @@ final readonly class OutboxMessageRepository
      * @return list<array{id:string,body:string}>
      */
     public function claimPendingBatch(
+        string $lockId,
+        \DateTimeImmutable $now,
+        int $limit,
+        \DateTimeImmutable $staleBefore,
+    ): array {
+        if ($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            return $this->claimPendingBatchPostgreSql($lockId, $now, $limit, $staleBefore);
+        }
+
+        return $this->claimPendingBatchMySql($lockId, $now, $limit, $staleBefore);
+    }
+
+    /**
+     * @return list<array{id:string,body:string}>
+     */
+    private function claimPendingBatchPostgreSql(
+        string $lockId,
+        \DateTimeImmutable $now,
+        int $limit,
+        \DateTimeImmutable $staleBefore,
+    ): array {
+        $sql = <<<'SQL'
+            WITH claimed AS (
+                SELECT id
+                FROM outbox_messages
+                WHERE processed_at IS NULL
+                  AND available_at <= :availableAt
+                  AND (lock_id IS NULL OR locked_at < :staleBefore)
+                ORDER BY created_at ASC
+                FOR UPDATE SKIP LOCKED
+                LIMIT %d
+            )
+            UPDATE outbox_messages AS outbox
+            SET lock_id = :lockId,
+                locked_at = :lockedAt
+            FROM claimed
+            WHERE outbox.id = claimed.id
+            RETURNING outbox.id, outbox.body
+        SQL;
+
+        /** @var list<array{id:string,body:string}> $rows */
+        $rows = $this->connection->fetchAllAssociative(
+            sprintf($sql, max(1, $limit)),
+            [
+                'lockId' => $lockId,
+                'lockedAt' => $now->format('Y-m-d H:i:s'),
+                'availableAt' => $now->format('Y-m-d H:i:s'),
+                'staleBefore' => $staleBefore->format('Y-m-d H:i:s'),
+            ],
+        );
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array{id:string,body:string}>
+     */
+    private function claimPendingBatchMySql(
         string $lockId,
         \DateTimeImmutable $now,
         int $limit,

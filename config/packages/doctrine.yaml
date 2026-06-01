@@ -1,7 +1,8 @@
 doctrine:
   dbal:
     url: '%env(resolve:DATABASE_URL)%'
-    server_version: '8.4'
+    server_version: '18'
+    schema_filter: '~^(?!(?:.*\.)?(?:outbox_messages|registration_ip_counters)$)~'
     profiling_collect_backtrace: '%kernel.debug%'
     use_savepoints: true
   orm:

@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Wallet | Wallet Console{% endblock %}
+{% block title %}{{ 'wallet.show.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -16,36 +17,36 @@
         <h1>{{ wallet.networkName }}</h1>
         <p class="mono">{{ wallet.address }}</p>
       </div>
-      <a class="button button-muted" href="{{ path('app_dashboard') }}">Back</a>
+      <a class="button button-muted" href="{{ path('app_dashboard') }}">{{ 'common.back'|trans }}</a>
     </header>
 
     {% include 'web_app/_flash.html.twig' %}
 
     <section class="wallet-grid">
       <article class="hero-widget">
-        <span>Balance</span>
-        <strong>{{ wallet.lastKnownBalanceDisplay ?: 'Not synced' }}</strong>
+        <span>{{ 'wallet.balance'|trans }}</span>
+        <strong>{{ wallet.lastKnownBalanceDisplay ?: 'wallet.not_synced'|trans }}</strong>
         <meter min="0" max="100" value="{{ balanceRatio }}"></meter>
       </article>
-      <article class="metric"><span>Native asset</span><strong>{{ wallet.nativeSymbol }}</strong></article>
-      <article class="metric"><span>Network id</span><strong>{{ wallet.networkId }}</strong></article>
-      <article class="metric"><span>Last sync</span><strong>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('m-d H:i') : '-' }}</strong></article>
+      <article class="metric"><span>{{ 'wallet.native_asset'|trans }}</span><strong>{{ wallet.nativeSymbol }}</strong></article>
+      <article class="metric"><span>{{ 'wallet.network_id'|trans }}</span><strong>{{ wallet.networkId }}</strong></article>
+      <article class="metric"><span>{{ 'wallet.last_sync'|trans }}</span><strong>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('m-d H:i') : '-' }}</strong></article>
     </section>
 
     <section class="panel detail-panel">
       <div>
-        <h2>Wallet details</h2>
+        <h2>{{ 'wallet.details'|trans }}</h2>
         <dl class="definition-grid">
-          <div><dt>ID</dt><dd class="mono">{{ wallet.id }}</dd></div>
-          <div><dt>Address</dt><dd class="mono">{{ wallet.address }}</dd></div>
-          <div><dt>RPC endpoint</dt><dd class="mono">{{ wallet.rpcEndpoint }}</dd></div>
-          <div><dt>Created</dt><dd>{{ wallet.createdAt|date('Y-m-d H:i') }}</dd></div>
-          <div><dt>Balance wei</dt><dd class="mono">{{ wallet.lastKnownBalanceWei ?: '-' }}</dd></div>
+          <div><dt>{{ 'wallet.id'|trans }}</dt><dd class="mono">{{ wallet.id }}</dd></div>
+          <div><dt>{{ 'wallet.address'|trans }}</dt><dd class="mono">{{ wallet.address }}</dd></div>
+          <div><dt>{{ 'wallet.rpc_endpoint'|trans }}</dt><dd class="mono">{{ wallet.rpcEndpoint }}</dd></div>
+          <div><dt>{{ 'wallet.created'|trans }}</dt><dd>{{ wallet.createdAt|date('Y-m-d H:i') }}</dd></div>
+          <div><dt>{{ 'wallet.balance_wei'|trans }}</dt><dd class="mono">{{ wallet.lastKnownBalanceWei ?: '-' }}</dd></div>
         </dl>
       </div>
 
       <div class="chart-card">
-        <h2>Balance signal</h2>
+        <h2>{{ 'wallet.balance_signal'|trans }}</h2>
         <div class="bar-chart" style="--value: {{ balanceRatio }}%;">
           <span></span>
         </div>
@@ -56,19 +57,19 @@
       {{ form_start(walletUpdateForm, { action: path('app_wallet_update', { id: wallet.id }), attr: { class: 'stack-form compact-form' } }) }}
         {{ form_widget(walletUpdateForm.id) }}
         {{ form_row(walletUpdateForm.rpcEndpoint) }}
-        <button class="button button-primary" type="submit">Update RPC</button>
+        <button class="button button-primary" type="submit">{{ 'wallet.update_rpc'|trans }}</button>
       {{ form_end(walletUpdateForm) }}
 
       <div class="danger-zone">
         <form method="post" action="{{ path('app_wallet_sync', { id: wallet.id }) }}">
           <input type="hidden" name="web3_wallet_action_web_form[id]" value="{{ wallet.id }}">
           <input type="hidden" name="web3_wallet_action_web_form[_token]" value="{{ csrf_token('web_wallet_action') }}">
-          <button class="button" type="submit">Sync balance</button>
+          <button class="button" type="submit">{{ 'wallet.sync_balance'|trans }}</button>
         </form>
-        <form method="post" action="{{ path('app_wallet_delete', { id: wallet.id }) }}" onsubmit="return confirm('Delete this wallet?');">
+        <form method="post" action="{{ path('app_wallet_delete', { id: wallet.id }) }}" onsubmit="return confirm('{{ 'wallet.delete_confirm'|trans }}');">
           <input type="hidden" name="web3_wallet_action_web_form[id]" value="{{ wallet.id }}">
           <input type="hidden" name="web3_wallet_action_web_form[_token]" value="{{ csrf_token('web_wallet_action') }}">
-          <button class="button button-danger" type="submit">Delete wallet</button>
+          <button class="button button-danger" type="submit">{{ 'wallet.delete'|trans }}</button>
         </form>
       </div>
     </section>

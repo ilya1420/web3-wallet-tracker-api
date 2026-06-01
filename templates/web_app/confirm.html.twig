@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Confirm token | Wallet Console{% endblock %}
+{% block title %}{{ 'auth.confirm.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -11,7 +12,7 @@
   <section class="auth-panel narrow">
     <div class="brand-block">
       <span class="brand-mark">WC</span>
-      <h1>Confirm token</h1>
+      <h1>{{ 'auth.confirm.heading'|trans }}</h1>
       <p class="account-line">{{ pendingEmail }}</p>
     </div>
 
@@ -20,7 +21,7 @@
     <section class="surface">
       {{ form_start(confirmForm, { action: path('app_web_confirm_submit'), attr: { class: 'stack-form' } }) }}
         {{ form_row(confirmForm.token) }}
-        <button class="button button-primary" type="submit">Enter console</button>
+        <button class="button button-primary" type="submit">{{ 'auth.confirm.submit'|trans }}</button>
       {{ form_end(confirmForm) }}
     </section>
   </section>

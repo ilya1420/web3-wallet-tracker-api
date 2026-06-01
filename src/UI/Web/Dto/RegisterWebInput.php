@@ -16,7 +16,7 @@ final class RegisterWebInput
     #[Assert\Length(min: 8, max: 255)]
     #[Assert\Regex(
         pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/',
-        message: 'Password must include upper, lower, digit and special character.',
+        message: 'validation.password.complexity',
     )]
     public string $password = '';
 

@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class Web3WalletCreateWebInput
 {
     #[Assert\NotBlank]
-    #[Assert\Regex(pattern: '/^0x[a-fA-F0-9]{40}$/', message: 'Address must be a valid EVM address.')]
+    #[Assert\Regex(pattern: '/^0x[a-fA-F0-9]{40}$/', message: 'validation.wallet.address.evm')]
     public string $address = '';
 
     #[Assert\NotBlank]

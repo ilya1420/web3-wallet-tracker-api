@@ -1,0 +1,9 @@
+services:
+  php:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+
+  worker:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+
+  outbox-relay:
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"

@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
 
-{% block title %}Sign in | Wallet Console{% endblock %}
+{% block title %}{{ 'auth.sign_in.title'|trans }}{% endblock %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="/web-app/app.css">
@@ -11,14 +12,14 @@
   <section class="auth-panel narrow">
     <div class="brand-block">
       <span class="brand-mark">WC</span>
-      <h1>Wallet Console</h1>
-      <p>Account access and EVM wallet monitoring for the demo workspace.</p>
+      <h1>{{ 'brand.wallet_console'|trans }}</h1>
+      <p>{{ 'auth.sign_in.subtitle'|trans }}</p>
     </div>
 
     {% include 'web_app/_flash.html.twig' %}
 
     <section class="surface">
-      <h2>Sign in</h2>
+      <h2>{{ 'auth.sign_in.heading'|trans }}</h2>
       {{ form_start(loginForm, { action: path('app_web_login_submit'), attr: { class: 'stack-form' } }) }}
         {{ form_row(loginForm.email) }}
         <div class="form-row">
@@ -34,12 +35,12 @@
             </div>
             {{ form_errors(loginForm.password) }}
         </div>
-        <button class="button button-primary" type="submit">Sign in</button>
+        <button class="button button-primary" type="submit">{{ 'auth.sign_in.submit'|trans }}</button>
       {{ form_end(loginForm) }}
 
       <div class="auth-switch">
-        <span>New workspace?</span>
-        <a class="button button-muted" href="{{ path('app_web_register_form') }}">Create account</a>
+        <span>{{ 'auth.sign_in.new_workspace'|trans }}</span>
+        <a class="button button-muted" href="{{ path('app_web_register_form') }}">{{ 'auth.sign_in.create_account'|trans }}</a>
       </div>
     </section>
   </section>

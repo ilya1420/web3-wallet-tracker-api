@@ -9,7 +9,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'login_tokens')]
-#[ORM\Index(name: 'idx_login_token_lookup', columns: ['email', 'token_hash'])]
+#[ORM\Index(name: 'idx_login_token_consume', columns: ['email', 'token_hash', 'used_at', 'expires_at'])]
 #[ORM\Index(name: 'idx_login_token_expires_at', columns: ['expires_at'])]
 class LoginToken
 {
