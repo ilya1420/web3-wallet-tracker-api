@@ -1,9 +1,9 @@
 services:
   php:
-    user: "${UID:-1000}:${GID:-1000}"
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
 
   worker:
-    user: "${UID:-1000}:${GID:-1000}"
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
 
   outbox-relay:
-    user: "${UID:-1000}:${GID:-1000}"
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"

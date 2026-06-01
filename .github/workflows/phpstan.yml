@@ -32,12 +32,12 @@ jobs:
 
       - name: Build PHP image
         run: >
-          UID=$(id -u) GID=$(id -g)
+          LOCAL_UID=$(id -u) LOCAL_GID=$(id -g)
           docker compose -f docker-compose.yml -f docker-compose.ci.yml build php
 
       - name: Install deps, warmup cache and run PHPStan
         run: >
-          UID=$(id -u) GID=$(id -g)
+          LOCAL_UID=$(id -u) LOCAL_GID=$(id -g)
           docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm php sh -lc
           "git config --global --add safe.directory /var/www/html &&
           composer install --no-interaction --prefer-dist &&
