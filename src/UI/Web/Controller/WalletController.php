@@ -23,6 +23,7 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class WalletController extends AbstractWebController
@@ -248,19 +249,18 @@ final class WalletController extends AbstractWebController
      */
     private function rememberCreateWalletFormState(FormInterface $form): void
     {
-        $session = $this->requestStack->getSession();
+        $session = $this->getFlashBagAwareSession();
         if ($session === null) {
             return;
         }
 
+        /** @var Web3WalletCreateWebInput $data */
         $data = $form->getData();
-        if ($data instanceof Web3WalletCreateWebInput) {
-            $session->getFlashBag()->set(self::CREATE_FORM_OLD_INPUT_FLASH_KEY, [[
-                'address' => $data->address,
-                'rpcPreset' => $data->rpcPreset,
-                'rpcEndpoint' => $data->rpcEndpoint,
-            ]]);
-        }
+        $session->getFlashBag()->set(self::CREATE_FORM_OLD_INPUT_FLASH_KEY, [[
+            'address' => $data->address,
+            'rpcPreset' => $data->rpcPreset,
+            'rpcEndpoint' => $data->rpcEndpoint,
+        ]]);
 
         $errors = [];
         foreach ($form->getErrors(true) as $error) {
@@ -279,21 +279,20 @@ final class WalletController extends AbstractWebController
      */
     private function restoreCreateWalletFormState(FormInterface $form): void
     {
-        $session = $this->requestStack->getSession();
+        $session = $this->getFlashBagAwareSession();
         if ($session === null) {
             return;
         }
 
         $oldInput = $session->getFlashBag()->get(self::CREATE_FORM_OLD_INPUT_FLASH_KEY);
         if ($oldInput !== [] && is_array($oldInput[0] ?? null)) {
+            /** @var Web3WalletCreateWebInput $data */
             $data = $form->getData();
-            if ($data instanceof Web3WalletCreateWebInput) {
-                $payload = $oldInput[0];
-                $data->address = (string) ($payload['address'] ?? '');
-                $data->rpcPreset = (string) ($payload['rpcPreset'] ?? EvmRpcPreset::ETHEREUM->value);
-                $rpcEndpoint = $payload['rpcEndpoint'] ?? null;
-                $data->rpcEndpoint = is_string($rpcEndpoint) ? $rpcEndpoint : null;
-            }
+            $payload = $oldInput[0];
+            $data->address = (string) ($payload['address'] ?? '');
+            $data->rpcPreset = (string) ($payload['rpcPreset'] ?? EvmRpcPreset::ETHEREUM->value);
+            $rpcEndpoint = $payload['rpcEndpoint'] ?? null;
+            $data->rpcEndpoint = is_string($rpcEndpoint) ? $rpcEndpoint : null;
         }
 
         $flashErrors = $session->getFlashBag()->get(self::CREATE_FORM_ERRORS_FLASH_KEY);
@@ -309,5 +308,17 @@ final class WalletController extends AbstractWebController
                 $target->addError(new FormError($message));
             }
         }
+    }
+
+    private function getFlashBagAwareSession(): ?FlashBagAwareSessionInterface
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request === null || !$request->hasSession()) {
+            return null;
+        }
+
+        $session = $request->getSession();
+
+        return $session instanceof FlashBagAwareSessionInterface ? $session : null;
     }
 }
