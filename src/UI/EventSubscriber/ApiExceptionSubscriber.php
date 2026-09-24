@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\UI\EventSubscriber;
 
 use App\Application\Exception\InvalidCredentialsException;
-use App\Application\Exception\SocialAuthException;
+use App\Application\Exception\CurrencyConversionException;
 use App\Application\Exception\InvalidLoginTokenException;
 use App\Application\Exception\MultiAccountingDetectedException;
 use App\Application\Exception\RateLimitExceededException;
+use App\Application\Exception\SocialAuthException;
 use App\Application\Exception\UserAlreadyExistsException;
 use App\Application\Exception\UserNotFoundException;
 use App\Application\Exception\Web3ProviderException;
