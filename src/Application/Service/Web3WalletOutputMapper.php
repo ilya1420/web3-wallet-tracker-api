@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Service;
 
+use App\Application\DTO\ConversionResult;
 use App\Application\DTO\Web3WalletBalanceOutput;
 use App\Application\DTO\Web3WalletOutput;
 use App\Domain\Enum\EvmRpcPreset;

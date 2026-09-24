@@ -71,8 +71,8 @@ final readonly class CoinMarketCapCurrencyConverter implements CurrencyConverter
         ], '', '&', PHP_QUERY_RFC3986);
 
         $payload = $this->httpClient->getJson($url, [
-            'Accept: application/json',
-            'X-CMC_PRO_API_KEY: ' . $this->apiKey,
+            'Accept' => 'application/json',
+            'X-CMC_PRO_API_KEY' => $this->apiKey,
         ]);
 
         $data = $payload['data'] ?? null;

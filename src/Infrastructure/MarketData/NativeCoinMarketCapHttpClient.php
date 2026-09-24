@@ -17,7 +17,11 @@ final readonly class NativeCoinMarketCapHttpClient implements CoinMarketCapHttpC
         $response = @file_get_contents($url, false, stream_context_create([
             'http' => [
                 'method' => 'GET',
-                'header' => implode("\r\n", $headers),
+                'header' => implode("\r\n", array_map(
+                    static fn (string $name, string $value): string => sprintf('%s: %s', $name, $value),
+                    array_keys($headers),
+                    array_values($headers),
+                )),
                 'timeout' => $this->requestTimeout,
                 'ignore_errors' => true,
             ],
