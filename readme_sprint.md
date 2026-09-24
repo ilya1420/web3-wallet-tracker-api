@@ -23,7 +23,9 @@
 ### Week 2
 
 - Introduce API contract tests for `/api/auth/register`, `/api/auth/login-links`, `/api/auth/confirm-token`.
+- Add provider-agnostic social auth foundation for Google OAuth2, Google One Tap, and Telegram Login Widget.
 - Add integration tests for `RequestLoginLinkUseCase` and `ConfirmLoginTokenUseCase`.
+- Add social auth integration coverage following the provider sketches in `README.md`.
 - Add domain unit tests for `Email`, token invariants, and security-sensitive rules.
 - Update README runbook for local incident triage (auth failures, mail queue delays).
 

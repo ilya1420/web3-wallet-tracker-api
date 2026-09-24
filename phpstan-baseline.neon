@@ -31,12 +31,6 @@ parameters:
 			path: src/Domain/Entity/User.php
 
 		-
-			rawMessage: 'Method App\Domain\Entity\User::getUserIdentifier() should return non-empty-string but returns string.'
-			identifier: return.type
-			count: 1
-			path: src/Domain/Entity/User.php
-
-		-
 			rawMessage: Instantiated class Symfony\Component\Messenger\Exception\MessageEncodingFailedException not found.
 			identifier: class.notFound
 			count: 2

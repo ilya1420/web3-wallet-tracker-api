@@ -48,10 +48,12 @@ Public:
 - `POST /api/auth/register`
 - `POST /api/auth/login-links`
 - `POST /api/auth/confirm-token`
+- `POST /api/auth/social/{provider}`
 
 Authenticated:
 
 - `GET /api/me`
+- `POST /api/auth/social/{provider}/link`
 - `POST /api/web3/wallets`
 - `GET /api/web3/wallets`
 - `GET /api/web3/wallets/{id}`
@@ -128,6 +130,40 @@ RabbitMQ message body format (cross-language friendly JSON):
 2. `SignInWithPasswordUseCase` normalizes email, applies the Redis-backed login rate limit, checks that the email exists in `users`, and verifies the password hash.
 3. Failed email/password checks return the same generic error to avoid public user enumeration; structured logs keep only hashed email context.
 4. Successful sign-in updates `lastLoginAt`, issues a hashed access token, and keeps the raw token only in the Symfony web session.
+
+### 3.2) Social sign-in
+
+Identity model:
+
+- `users.id` is the only source of truth for user identity.
+- `users.email` is nullable contact data, not the identity key.
+- `social_accounts(provider, provider_user_id)` stores external login credentials linked to one internal user.
+- `notification_channels` stores verified delivery channels independently from identity.
+
+Supported providers:
+
+- `google_oauth2`: browser redirect flow. Start at `GET /app/auth/social/google_oauth2/redirect`; callback is `GET /app/auth/social/google_oauth2/callback`.
+- `google_one_tap`: credential JWT flow via `POST /api/auth/social/google_one_tap` with `{ "credential": "<jwt>" }`.
+- `telegram`: Telegram Login Widget flow via `POST /api/auth/social/telegram` with the widget payload, including `hash`.
+
+Flow:
+
+1. Provider adapters live under `src/Infrastructure/SocialAuth/` and implement `App\Application\Service\SocialAuthProvider`.
+2. `SocialAuthService` is a provider registry and delegates by provider name; it contains no provider-specific verification logic.
+3. Providers return `SocialAuthProfile` only after signature/token verification.
+4. `SignInWithSocialProfileUseCase` delegates lookup/creation to the domain `SocialUserResolver`, updates `lastLoginAt`/verification, and issues the same persisted bearer token as password auth.
+5. Social account links are stored in `social_accounts` with a unique `(provider, provider_user_id)` index.
+6. If `(provider, provider_user_id)` exists, that linked `users.id` is logged in.
+7. If it does not exist and the provider returns a verified email already used by another user, the system refuses auto-merge and returns a conflict. The user must sign in to the existing account and call `POST /api/auth/social/{provider}/link`.
+8. If the provider does not return email, the system creates a user with `email = null` and links the social account. Telegram also creates a verified `telegram` notification channel using the Telegram user id as destination.
+9. If a business feature requires email later, that feature should enforce an onboarding/profile step; social login itself does not fabricate or require email.
+
+Integration test sketch:
+
+- Google OAuth2: mock Google token and tokeninfo endpoints, call `GET /app/auth/social/google_oauth2/redirect`, preserve session `state`, call callback with `code` + `state`, assert redirect to dashboard, session access token exists, `social_accounts` row is linked.
+- Google One Tap: generate a signed RS256 JWT with Google-like claims and JWKS, call `POST /api/auth/social/google_one_tap`, assert `200`, `data.tokenType=Bearer`, user verified, social account linked.
+- Telegram API: build valid widget payload without email, call `POST /api/auth/social/telegram`, assert `200`, `data.tokenType=Bearer`, user email is `null`, social account is linked, and a verified Telegram notification channel exists.
+- Linking: authenticate as an existing user, call `POST /api/auth/social/telegram/link` with a valid Telegram payload, assert the social account points to the existing `users.id`. A social account already linked to another user must return conflict.
 
 ### 4) Authenticated requests
 
@@ -232,6 +268,7 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 - DTOs are used for all API contracts; Doctrine entities are never exposed directly.
 - SMTP sender is configured via `MAILER_FROM`.
 - Web3 defaults are configured via `WEB3_DEFAULT_RPC_URL` and `WEB3_REQUEST_TIMEOUT`.
+- Social auth env vars are consumed through Symfony process env placeholders in `config/services.yaml`: `GOOGLE_CLIENT_ID` is injected into `src/Infrastructure/SocialAuth/GoogleOAuth2Provider.php` and `src/Infrastructure/SocialAuth/GoogleIdTokenVerifier.php`; `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI` are injected into `src/Infrastructure/SocialAuth/GoogleOAuth2Provider.php`; `TELEGRAM_BOT_TOKEN` is injected into `src/Infrastructure/SocialAuth/TelegramWidgetProvider.php`.
 - Success responses are unified JSON: `{"data": ...}`.
 - Error responses are unified JSON: `{"message":"<text>"}` with proper HTTP status code.
 - API errors are logged by Monolog and visible in container logs.

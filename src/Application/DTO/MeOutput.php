@@ -8,7 +8,8 @@ final readonly class MeOutput
 {
     public function __construct(
         public string $id,
-        public string $email,
+        public ?string $email,
+        public ?string $displayName,
         public array $roles,
         public bool $isVerified,
         public ?string $lastLoginAt,

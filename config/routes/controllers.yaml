@@ -1,3 +1,7 @@
 controllers:
     resource: '../../src/UI/Web/Controller/'
     type: attribute
+
+api_controllers:
+    resource: '../../src/UI/Controller/'
+    type: attribute

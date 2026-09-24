@@ -7,7 +7,7 @@ security:
     app_user_provider:
       entity:
         class: App\Domain\Entity\User
-        property: email
+        property: id
 
   firewalls:
     dev:
@@ -39,6 +39,8 @@ security:
     - { path: ^/$, roles: PUBLIC_ACCESS }
     - { path: ^/app/auth, roles: PUBLIC_ACCESS }
     - { path: ^/app, roles: ROLE_USER }
+    - { path: ^/api/auth/social/.+/link, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/api/auth/social, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/login-links, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/request-login-link, roles: PUBLIC_ACCESS }

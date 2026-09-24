@@ -11,7 +11,9 @@ final readonly class AdminUserOutput
      */
     public function __construct(
         public string $id,
-        public string $email,
+        public ?string $email,
+        public ?string $displayName,
+        public ?string $phone,
         public array $roles,
         public bool $isVerified,
         public ?string $lastLoginAt,

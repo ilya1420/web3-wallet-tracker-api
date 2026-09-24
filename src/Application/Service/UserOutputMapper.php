@@ -17,6 +17,7 @@ final class UserOutputMapper
         return new UserOutput(
             id: $user->id()->toRfc4122(),
             email: $user->email(),
+            displayName: $user->displayName(),
             isVerified: $user->isVerified(),
             lastLoginAt: $user->lastLoginAt()?->format(DATE_ATOM),
             createdAt: $user->createdAt()->format(DATE_ATOM),
@@ -28,6 +29,7 @@ final class UserOutputMapper
         return new MeOutput(
             id: $user->id()->toRfc4122(),
             email: $user->email(),
+            displayName: $user->displayName(),
             roles: $user->getRoles(),
             isVerified: $user->isVerified(),
             lastLoginAt: $user->lastLoginAt()?->format(DATE_ATOM),
@@ -40,6 +42,8 @@ final class UserOutputMapper
         return new AdminUserOutput(
             id: $user->id()->toRfc4122(),
             email: $user->email(),
+            displayName: $user->displayName(),
+            phone: $user->phone(),
             roles: $user->getRoles(),
             isVerified: $user->isVerified(),
             lastLoginAt: $user->lastLoginAt()?->format(DATE_ATOM),
