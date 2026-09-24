@@ -185,8 +185,11 @@ Integration test sketch:
 1. Authenticated user sends `POST /api/web3/wallets` with wallet address and optional `rpcPreset` (`ethereum`, `arbitrum`, `optimism`, `base`, `polygon`, `bsc`, `avalanche`) and optional custom `rpcEndpoint`.
 2. Service validates EVM address and auto-selects public RPC endpoint from preset when custom endpoint is not provided.
 3. Service resolves/stores `networkId` and wallet metadata in `web3_wallets` (custom RPC is validated against selected preset if both are provided).
-4. Client calls `GET /api/web3/wallets/{id}/balance`.
+4. Client calls `GET /api/web3/wallets/{id}/balance?quoteCurrency=USD` (`USD` is the default).
 5. Service fetches on-chain balance via `web3php` (`eth_getBalance`), persists `lastKnownBalanceWei` + `lastSyncedAt`, and returns normalized + human-readable balance fields.
+6. The response additionally contains `marketValue` when CoinMarketCap can price the wallet's native asset. It includes source/quote currency, exact decimal strings for amount and rate, and CMC's `rateUpdatedAt`. `marketValue` is a market estimate, not an accounting or settlement value; it is `null` when a quote is unavailable.
+7. The `/app` dashboard shows an approximate USD equivalent directly beneath every synced supported-wallet balance. It uses the same cached application port; unavailable market data never hides or changes the native on-chain balance.
+8. The authenticated `/app/converter` page provides a CoinMarketCap converter for the supported assets and quote currencies. It preserves the selected pair in the URL, shows the market-rate timestamp, and does not request a quote until the user submits the form.
 
 ## Run With Docker
 
@@ -268,6 +271,8 @@ Workflow uses Composer cache (`vendor` + `~/.composer/cache/files`) and executes
 - DTOs are used for all API contracts; Doctrine entities are never exposed directly.
 - SMTP sender is configured via `MAILER_FROM`.
 - Web3 defaults are configured via `WEB3_DEFAULT_RPC_URL` and `WEB3_REQUEST_TIMEOUT`.
+- CoinMarketCap conversion uses `CMC_API_KEY`, `CMC_REQUEST_TIMEOUT`, `CMC_PRICE_CACHE_TTL` (55 seconds by default), and `CMC_DEFAULT_QUOTE_CURRENCY`. Put the API key only in deployment secrets or uncommitted `.env`; it is sent exclusively as the `X-CMC_PRO_API_KEY` request header and is never logged. Recreate the PHP container after changing Docker `env_file` values: `docker compose up -d --force-recreate php`.
+- CoinMarketCap rates are cached by currency pair to stay below provider limits. A market-data outage does not fail the on-chain balance sync: API clients receive `marketValue: null`, while the application logs `web3.wallet.market_value_unavailable`.
 - Social auth env vars are consumed through Symfony process env placeholders in `config/services.yaml`: `GOOGLE_CLIENT_ID` is injected into `src/Infrastructure/SocialAuth/GoogleOAuth2Provider.php` and `src/Infrastructure/SocialAuth/GoogleIdTokenVerifier.php`; `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI` are injected into `src/Infrastructure/SocialAuth/GoogleOAuth2Provider.php`; `TELEGRAM_BOT_TOKEN` is injected into `src/Infrastructure/SocialAuth/TelegramWidgetProvider.php`.
 - Success responses are unified JSON: `{"data": ...}`.
 - Error responses are unified JSON: `{"message":"<text>"}` with proper HTTP status code.
@@ -379,7 +384,7 @@ curl -X POST http://localhost:8080/api/web3/wallets \
 Refresh and read wallet balance:
 
 ```bash
-curl http://localhost:8080/api/web3/wallets/<wallet-id>/balance \
+curl 'http://localhost:8080/api/web3/wallets/<wallet-id>/balance?quoteCurrency=USD' \
   -H 'Authorization: Bearer <access-token>'
 ```
 

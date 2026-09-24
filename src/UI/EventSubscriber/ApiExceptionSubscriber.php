@@ -53,7 +53,7 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
             $throwable instanceof Web3WalletNotFoundException, $throwable instanceof UserNotFoundException => new NotFoundHttpException($throwable->getMessage(), $throwable),
             $throwable instanceof MultiAccountingDetectedException, $throwable instanceof DtoValidationException, $throwable instanceof \InvalidArgumentException => new UnprocessableEntityHttpException($throwable->getMessage(), $throwable),
             $throwable instanceof UnexpectedInputTypeException => new HttpException(Response::HTTP_BAD_REQUEST, $throwable->getMessage(), $throwable),
-            $throwable instanceof Web3ProviderException => new HttpException(Response::HTTP_BAD_GATEWAY, $throwable->getMessage(), $throwable),
+            $throwable instanceof Web3ProviderException, $throwable instanceof CurrencyConversionException => new HttpException(Response::HTTP_BAD_GATEWAY, $throwable->getMessage(), $throwable),
             default => null,
         };
 

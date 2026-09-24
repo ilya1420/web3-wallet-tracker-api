@@ -35,7 +35,7 @@ final class Web3WalletOutputMapper
         );
     }
 
-    public function toBalanceOutput(Web3Wallet $wallet): Web3WalletBalanceOutput
+    public function toBalanceOutput(Web3Wallet $wallet, ?ConversionResult $marketValue = null): Web3WalletBalanceOutput
     {
         $balanceWei = $wallet->lastKnownBalanceWei() ?? '0';
         $balanceEth = $this->formatWeiToEth($balanceWei);
@@ -54,6 +54,7 @@ final class Web3WalletOutputMapper
             balanceEthFormatted: $balanceEthFormatted,
             balanceDisplay: sprintf('%s %s', $balanceEthFormatted, $nativeSymbol),
             syncedAt: ($wallet->lastSyncedAt() ?? new \DateTimeImmutable())->format(DATE_ATOM),
+            marketValue: $marketValue,
         );
     }
 

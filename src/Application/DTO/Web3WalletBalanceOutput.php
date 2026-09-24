@@ -17,6 +17,7 @@ final readonly class Web3WalletBalanceOutput
         public string $balanceEthFormatted,
         public string $balanceDisplay,
         public string $syncedAt,
+        public ?ConversionResult $marketValue,
     ) {
     }
 }

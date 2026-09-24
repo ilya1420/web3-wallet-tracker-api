@@ -49,7 +49,12 @@
               <tr>
                 <td><span class="mono">{{ wallet.address }}</span></td>
                 <td>{{ wallet.networkName }}</td>
-                <td><span class="pill">{{ wallet.lastKnownBalanceDisplay ?: 'wallet.not_synced'|trans }}</span></td>
+                <td>
+                  <span class="pill">{{ wallet.lastKnownBalanceDisplay ?: 'wallet.not_synced'|trans }}</span>
+                  {% if walletUsdValues[wallet.id] is defined %}
+                    <span class="balance-usd" title="{{ 'wallet.usd_estimate_updated'|trans }}: {{ walletUsdValues[wallet.id].updatedAt|date('Y-m-d H:i:s T') }}">≈ ${{ walletUsdValues[wallet.id].amount }}</span>
+                  {% endif %}
+                </td>
                 <td>{{ wallet.lastSyncedAt ? wallet.lastSyncedAt|date('Y-m-d H:i') : '-' }}</td>
                 <td><a class="button button-small" href="{{ path('app_wallet_show', { id: wallet.id }) }}">{{ 'common.view'|trans }}</a></td>
               </tr>

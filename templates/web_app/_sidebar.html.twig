@@ -3,6 +3,7 @@
   <a class="brand" href="{{ path('app_dashboard') }}"><span class="brand-mark">WC</span><span>{{ 'brand.wallet_console'|trans }}</span></a>
   <nav class="nav-list">
     <a class="{{ active == 'overview' ? 'is-active' : '' }}" href="{{ path('app_dashboard') }}">{{ 'dashboard.overview'|trans }}</a>
+    <a class="{{ active == 'converter' ? 'is-active' : '' }}" href="{{ path('app_market_converter') }}">{{ 'market.page.nav'|trans }}</a>
     <a class="{{ active == 'wallet_new' ? 'is-active' : '' }}" href="{{ path('app_wallet_new') }}">{{ 'wallet.add'|trans }}</a>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <a href="{{ app.request.pathInfo }}?_locale=en">EN</a>
