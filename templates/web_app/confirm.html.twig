@@ -19,7 +19,7 @@
     {% include 'web_app/_flash.html.twig' %}
 
     <section class="surface">
-      {{ form_start(confirmForm, { action: path('app_web_confirm_submit'), attr: { class: 'stack-form' } }) }}
+      {{ form_start(confirmForm, { action: confirmAction|default(path('app_web_confirm_submit')), attr: { class: 'stack-form' } }) }}
         {{ form_row(confirmForm.token) }}
         <button class="button button-primary" type="submit">{{ 'auth.confirm.submit'|trans }}</button>
       {{ form_end(confirmForm) }}

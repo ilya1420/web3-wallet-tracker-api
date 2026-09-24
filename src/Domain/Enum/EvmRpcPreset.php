@@ -63,6 +63,16 @@ enum EvmRpcPreset: string
         };
     }
 
+    public function coinMarketCapSymbol(): string
+    {
+        return match ($this) {
+            self::BSC => 'BNB',
+            self::POLYGON => 'POL',
+            self::AVALANCHE => 'AVAX',
+            default => 'ETH',
+        };
+    }
+
     /** @return list<string> */
     public static function values(): array
     {

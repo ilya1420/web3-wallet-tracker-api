@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+{% trans_default_domain 'messages' %}
+
+{% block title %}{{ 'market.page.title'|trans }}{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/web-app/app.css">
+{% endblock %}
+
+{% block body %}
+<main class="app-shell">
+  {% include 'web_app/_sidebar.html.twig' with { active: 'converter' } %}
+  <section class="content">
+    <header class="page-head">
+      <div>
+        <h1>{{ 'market.page.heading'|trans }}</h1>
+        <p>{{ 'market.page.subtitle'|trans }}</p>
+      </div>
+    </header>
+
+    <section class="market-converter-page" aria-labelledby="converter-card-title">
+      <h2 id="converter-card-title">{{ 'market.page.card_title'|trans }}</h2>
+
+      <form method="get" action="{{ path('app_market_converter') }}" class="market-converter-form" id="market-converter-form">
+        <input type="hidden" name="convert" value="1">
+        <div class="converter-fields">
+          <label class="converter-field converter-field-amount">
+            <span>{{ 'market.page.from'|trans }}</span>
+            <input id="converter-amount" name="amount" type="text" inputmode="decimal" maxlength="30" pattern="\d+(\.\d+)?" value="{{ market.amount }}" required>
+          </label>
+          <label class="converter-field">
+            <span>{{ 'market.page.asset'|trans }}</span>
+            <select id="converter-from" name="from">{% for symbol, name in baseCurrencies %}<option value="{{ symbol }}" {{ market.from == symbol ? 'selected' }}>{{ symbol }} · {{ name }}</option>{% endfor %}</select>
+          </label>
+          <button class="converter-swap" type="button" aria-label="{{ 'market.page.swap'|trans }}" title="{{ 'market.page.swap'|trans }}">⇄</button>
+          <label class="converter-field">
+            <span>{{ 'market.page.to'|trans }}</span>
+            <select id="converter-to" name="to">{% for symbol, name in quoteCurrencies %}<option value="{{ symbol }}" {{ market.to == symbol ? 'selected' }}>{{ symbol }} · {{ name }}</option>{% endfor %}</select>
+          </label>
+          <button class="button button-primary converter-submit" type="submit">{{ 'market.page.submit'|trans }}</button>
+        </div>
+      </form>
+
+      {% if market.result %}
+        <div class="market-converter-result" role="status">
+          <div class="converter-result-main">
+            <span>{{ 'market.page.estimated'|trans }}</span>
+            <strong>{{ market.convertedAmount }} <em>{{ market.result.to }}</em></strong>
+          </div>
+          <dl class="converter-result-meta"><div><dt>{{ 'market.page.rate'|trans }}</dt><dd>1 {{ market.result.from }} = {{ market.rate }} {{ market.result.to }}</dd></div><div><dt>{{ 'market.page.updated'|trans }}</dt><dd>{{ market.result.rateUpdatedAt|date('Y-m-d H:i:s T') }}</dd></div></dl>
+          <p>{{ 'market.page.disclaimer'|trans }}</p>
+        </div>
+      {% elseif market.error %}
+        <div class="market-converter-error" role="alert">{{ market.error|trans }}</div>
+      {% endif %}
+    </section>
+  </section>
+</main>
+{% endblock %}
+
+{% block javascripts %}
+  <script>
+    (() => {
+      const from = document.getElementById('converter-from');
+      const to = document.getElementById('converter-to');
+      const swap = document.querySelector('.converter-swap');
+
+      swap?.addEventListener('click', () => {
+        const currentFrom = from.value;
+        const targetOption = Array.from(from.options).find((option) => option.value === to.value);
+        const sourceOption = Array.from(to.options).find((option) => option.value === currentFrom);
+
+        if (targetOption && sourceOption) {
+          from.value = to.value;
+          to.value = currentFrom;
+        }
+      });
+    })();
+  </script>
+{% endblock %}

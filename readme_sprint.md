@@ -23,7 +23,9 @@
 ### Week 2
 
 - Introduce API contract tests for `/api/auth/register`, `/api/auth/login-links`, `/api/auth/confirm-token`.
+- Add provider-agnostic social auth foundation for Google OAuth2, Google One Tap, and Telegram Login Widget.
 - Add integration tests for `RequestLoginLinkUseCase` and `ConfirmLoginTokenUseCase`.
+- Add social auth integration coverage following the provider sketches in `README.md`.
 - Add domain unit tests for `Email`, token invariants, and security-sensitive rules.
 - Update README runbook for local incident triage (auth failures, mail queue delays).
 
@@ -88,6 +90,10 @@
   - Extended `POST /api/web3/wallets` contract with `rpcPreset` + automatic RPC selection and preset/RPC network mismatch protection.
   - Kept wallet delete flow in active contract (`DELETE /api/web3/wallets/{id}`) and refreshed UI/README usage.
   - Added human-readable balance fields to wallet responses for better operator UX.
+  - Added provider-agnostic market conversion port backed by CoinMarketCap Price Conversion v2; wallet balance responses now expose an optional cached fiat/crypto market estimate without persisting quotes as accounting data.
+  - Added exact string-based decimal multiplication, CMC API-key secret handling, one-minute pair cache, and graceful degradation when the market-data provider is unavailable.
+  - Added a compact USD equivalent beneath each supported wallet balance on the dashboard, reusing cached market quotes without obscuring the native on-chain balance.
+  - Added a dedicated market-converter page with an explicit submit action, persisted selected values in the URL, and clear rate/result states.
 - Started PostgreSQL transition:
   - Switched local Docker/PHP/Doctrine runtime from MySQL to PostgreSQL 18.
   - Added PostgreSQL baseline migration while keeping legacy MySQL migrations no-op on PostgreSQL.

@@ -13,6 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_user_email', columns: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_user_phone', columns: ['phone'])]
 #[ORM\Index(name: 'idx_user_created_at', columns: ['created_at'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -20,8 +21,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'uuid', unique: true)]
     private Uuid $id;
 
-    #[ORM\Column(type: 'string', length: 180)]
-    private string $email;
+    #[ORM\Column(type: 'string', length: 180, nullable: true)]
+    private ?string $email;
+
+    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    private ?string $phone;
+
+    #[ORM\Column(type: 'string', length: 120, nullable: true)]
+    private ?string $displayName;
 
     #[ORM\Column(type: 'string')]
     private string $password;
@@ -39,10 +46,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'json')]
     private array $roles;
 
-    public function __construct(Email $email, string $passwordHash, array $roles = ['ROLE_USER'])
+    public function __construct(?Email $email, string $passwordHash, array $roles = ['ROLE_USER'], ?string $displayName = null)
     {
         $this->id = Uuid::v7();
-        $this->email = $email->value();
+        $this->email = $email?->value();
+        $this->phone = null;
+        $this->displayName = $this->normalizeOptionalString($displayName);
         $this->password = $passwordHash;
         $this->isVerified = false;
         $this->lastLoginAt = null;
@@ -55,7 +64,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function email(): string
+    public function email(): ?string
     {
         return $this->email;
     }
@@ -63,6 +72,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function changeEmail(Email $email): void
     {
         $this->email = $email->value();
+    }
+
+    public function clearEmail(): void
+    {
+        $this->email = null;
+    }
+
+    public function phone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function changePhone(?string $phone): void
+    {
+        $this->phone = $this->normalizeOptionalString($phone);
+    }
+
+    public function displayName(): ?string
+    {
+        return $this->displayName;
+    }
+
+    public function changeDisplayName(?string $displayName): void
+    {
+        $this->displayName = $this->normalizeOptionalString($displayName);
     }
 
     public function verify(): void
@@ -107,7 +141,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->email;
+        return $this->id->toRfc4122();
     }
 
     public function getRoles(): array
@@ -135,4 +169,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->roles = array_values(array_unique(array_merge($roles, ['ROLE_USER'])));
     }
 
+    private function normalizeOptionalString(?string $value): ?string
+    {
+        $normalized = $value !== null ? trim($value) : '';
+
+        return $normalized !== '' ? $normalized : null;
+    }
 }

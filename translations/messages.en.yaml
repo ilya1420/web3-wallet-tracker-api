@@ -43,6 +43,31 @@ dashboard:
     synced: 'Synced'
     with_balance: 'With balance'
 
+market:
+  page:
+    nav: 'Converter'
+    title: 'Currency converter | Wallet Console'
+    heading: 'Currency converter'
+    subtitle: 'Compare supported crypto assets and quote currencies using the latest cached market rate.'
+    live_rate: 'Live market estimate'
+    cached_rate: 'Cached up to 55 sec'
+    card_title: 'How much is your crypto worth?'
+    from: 'You pay'
+    to: 'To'
+    asset: 'Asset'
+    amount_hint: 'Use a decimal amount, for example 0.25'
+    quick_amounts: 'Quick amount'
+    swap: 'Swap currencies'
+    submit: 'Convert'
+    estimated: 'Estimated value'
+    rate: 'Market rate'
+    updated: 'Rate timestamp'
+    hint: 'Choose an amount and currencies to request a live market estimate.'
+    empty_title: 'Ready when you are'
+    invalid_input: 'Enter a non-negative decimal amount and choose a supported currency pair.'
+    unavailable: 'Market data is temporarily unavailable. Please try again shortly.'
+    disclaimer: 'Indicative market data from CoinMarketCap. It is not a trade quote, settlement value, or financial advice.'
+
 wallet:
   add: 'Add wallet'
   new:
@@ -60,6 +85,7 @@ wallet:
   chain: '%symbol% / chain %chainId%'
   not_synced: 'Not synced'
   balance: 'Balance'
+  usd_estimate_updated: 'USD market estimate updated'
   native_asset: 'Native asset'
   network_id: 'Network id'
   last_sync: 'Last sync'

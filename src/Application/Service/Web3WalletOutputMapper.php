@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Service;
 
+use App\Application\DTO\ConversionResult;
 use App\Application\DTO\Web3WalletBalanceOutput;
 use App\Application\DTO\Web3WalletOutput;
 use App\Domain\Enum\EvmRpcPreset;
@@ -35,7 +36,7 @@ final class Web3WalletOutputMapper
         );
     }
 
-    public function toBalanceOutput(Web3Wallet $wallet): Web3WalletBalanceOutput
+    public function toBalanceOutput(Web3Wallet $wallet, ?ConversionResult $marketValue = null): Web3WalletBalanceOutput
     {
         $balanceWei = $wallet->lastKnownBalanceWei() ?? '0';
         $balanceEth = $this->formatWeiToEth($balanceWei);
@@ -54,6 +55,7 @@ final class Web3WalletOutputMapper
             balanceEthFormatted: $balanceEthFormatted,
             balanceDisplay: sprintf('%s %s', $balanceEthFormatted, $nativeSymbol),
             syncedAt: ($wallet->lastSyncedAt() ?? new \DateTimeImmutable())->format(DATE_ATOM),
+            marketValue: $marketValue,
         );
     }
 

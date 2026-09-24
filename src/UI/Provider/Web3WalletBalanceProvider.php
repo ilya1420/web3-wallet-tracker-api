@@ -10,6 +10,7 @@ use App\Application\DTO\ApiDataResponse;
 use App\Application\UseCase\GetWeb3WalletBalanceUseCase;
 use App\Domain\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
@@ -20,6 +21,7 @@ final readonly class Web3WalletBalanceProvider implements ProviderInterface
     public function __construct(
         private GetWeb3WalletBalanceUseCase $useCase,
         private Security $security,
+        private RequestStack $requestStack,
     ) {
     }
 
@@ -32,6 +34,8 @@ final readonly class Web3WalletBalanceProvider implements ProviderInterface
 
         $walletId = (string) ($uriVariables['id'] ?? '');
 
-        return new ApiDataResponse($this->useCase->execute($user, $walletId));
+        $quoteCurrency = $this->requestStack->getCurrentRequest()?->query->get('quoteCurrency');
+
+        return new ApiDataResponse($this->useCase->execute($user, $walletId, is_string($quoteCurrency) ? $quoteCurrency : null));
     }
 }
